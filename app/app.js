@@ -44,10 +44,27 @@ var keyExists = function(key) {
 
 ///////////////////////////////////////////
 $(document).ready(function() {
- // click event listener for create
-    // code goes here
+  // click event listener for create
+  $('#createButton').click(function(event) {
+    event.preventDefault(); // prevent refresh!
+    var currentKey = $('#keyInput').val();
+    var currentValue = $('#valueInput').val();
+    if(keyExists(currentKey)) {
+      // oopsie, maybe let the user know
+    } else {
+      createItem(currentKey, currentValue);
+    }
+  });
 
- // click event listener for update
-   // code goes here
- 
+  // click event listener for update
+  $('#updateButton').click(function(event) {
+    event.preventDefault(); // prevent refresh!
+    var currentKey = $('#keyInput').val();
+    var currentValue = $('#valueInput').val();
+    if(keyExists(currentKey)) {
+      updateItem(currentKey, currentValue);
+    } else {
+      // oopsie, maybe let the user know
+    }
+  });
 });
