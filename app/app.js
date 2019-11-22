@@ -37,6 +37,8 @@ let keyExists = function(key) {
 
 $(document).ready(function() {
 
+  // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML (Need timestamp of when it was entered???)
+
   // UPDATE CATEGORIES
 
   // UPDATE SUBCATEGORIES
@@ -129,10 +131,10 @@ $(document).ready(function() {
     // prepend to list of expenses
     let expenses = $('#expenses');
     expenses.prepend(`
-    <div>
+    <div class="expenseItem">
       <div>
         <p>${dateFormat}</p>
-        <p><span>${category}</span> <span>${subcategory}</span></p>
+        <div class="cat-and-subcat"><span>${category}</span> <span>${subcategory}</span></div>
         <p>$${expense}</p>
       </div>
 

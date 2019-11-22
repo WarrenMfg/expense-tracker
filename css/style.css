@@ -1,0 +1,155 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 2%;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr;
+  grid-template-areas: "category subcategory date amount add";
+}
+
+form div {
+  height: 100%;
+  width: 100%;
+}
+
+form p {
+  margin-bottom: 5px;
+}
+
+select {
+  width: 75%;
+  height: 24px;
+  border: 2px solid rgb(220, 220, 220);
+}
+
+i {
+  cursor: pointer;
+}
+
+input {
+  display: inline-block;
+  width: 75%;
+  height: 24px;
+  border: 2px solid rgb(220, 220, 220);
+  padding-left: 5px;
+  border-radius: 5px;
+}
+
+#category-div {
+  grid-area: category;
+}
+
+#subcategory-div {
+  grid-area: subcategory;
+}
+
+#date-div {
+  grid-area: date;
+}
+
+#amount-div {
+  grid-area: amount;
+}
+
+#dollar-sign {
+  display: inline-block;
+  margin-right: 3px;
+}
+
+#addExpense {
+  display: block;
+  align-self: end;
+  grid-area: add;
+  border-radius: 5px;
+  border: 1px solid black;
+  color: black;
+  background-color: white;
+  height: 75%;
+  transition: all 0.2s ease;
+}
+
+#addExpense:hover {
+  color: white;
+  background-color: black;
+  transform: scale(1.2);
+  border-radius: 50px;
+  cursor: pointer;
+}
+
+#expense-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "graph expenses";
+}
+
+#graph {
+  grid-area: graph;
+}
+
+#expenses {
+  grid-area: expenses;
+}
+
+.expenseItem {
+  margin: 30px 0;
+}
+
+.expenseItem p {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.expenseItem p:first-child {
+  padding: 15px 0;
+  margin: 0;
+}
+
+.cat-and-subcat {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "item-cat item-subcat";
+}
+
+.cat-and-subcat span:first-child {
+  display: block;
+  text-align: center;
+  margin-left: 30px;
+  grid-area: item-cat;
+}
+
+.cat-and-subcat span:last-child {
+  display: block;
+  text-align: center;
+  margin-right: 30px;
+  grid-area: item-subcat;
+}
+
+.delete {
+  display: block;
+  margin: 18px auto 0;
+  border-radius: 5px;
+  border: 1px solid black;
+  color: black;
+  background-color: white;
+  height: 25px;
+  width: 50px;
+  transition: all 0.2s ease;
+}
+
+.delete:hover {
+  color: white;
+  background-color: black;
+  transform: scale(1.2);
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+
