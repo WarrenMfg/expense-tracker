@@ -13,11 +13,24 @@
 <body>
 
   <form>
-    <input id="keyInput" type="text" placeholder="key"></input>
-    <input id="valueInput" type="text" placeholder="value"></input>
-    <button id="createButton" type="submit">Create</button>
-    <button id="updateButton" type="submit">Update</button>
+      <select id="category" required>
+        <option value="">Category</option>
+        <option value="Vehicle">Vehicle</option>
+        <option value="Food">Food</option>
+        <option value="Home">Home</option>
+      </select>
+      <select id="subcategory" required>
+        <option value="">Subcategory</option>
+        <option value="Personal">Personal</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Bill">Bill</option>
+      </select>
+
+    <input id="date" type="date" pattern="\d{4}-\d{2}-\d{2}" required> <!--add today's date and onclick open picker-->
+    $<input id="amount" type="text" placeholder="Amount" required>
+    <button id="addExpense" type="submit">Add Expense</button>
   </form>
+  <div id="expenses"></div>
   <script src="app/app.js"></script>
 </body>
 </html>
