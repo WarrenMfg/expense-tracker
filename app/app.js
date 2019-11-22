@@ -1,14 +1,3 @@
-/*
-
- ### Basic Reqs
-- [ ] Where to store data? (localstorage)
-- [ ] How to capture data? (web form)
-- [ ] How to modify data? (update action, delete action)
-- [ ] How to view data? (style?)
-- [ ] UI/UX considerations (how are we going to use this)
-
-*/
-
 // Local Storage Utility Functions
 //get item
 let getItem = function(key) {
@@ -58,7 +47,6 @@ $(document).ready(function() {
   // $('#amount').keyup(function(event) {
   //   why is enter working???
   // });
-
   $('#addExpense').click(function(event) {
     event.preventDefault(); // prevent refresh!
 
