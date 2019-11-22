@@ -57,6 +57,8 @@ $(document).ready(function() {
     let dateKey = $('#date')[0].value;
     let expense = parseFloat($('#amount').val()).toFixed(2); // value in array at subcategory key (of string type)
     let storageObj = {};
+    let timestamp = new Date().getTime();
+    console.log(timestamp);
 
     // if something is missing
     if (!category || !subcategory || !dateKey || !parseFloat(expense)) {
