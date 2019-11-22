@@ -37,9 +37,27 @@ let keyExists = function(key) {
 
 $(document).ready(function() {
 
-  // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML (Need timestamp of when it was entered???)
+  // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML // localStorageKeys.sort((a, b) => a - b);
+  function order(order) {
+    let localStorage = window.localStorage;
+    let localStorageKeys = Object.keys(localStorage);
+    let parsedLocalStorage = {};
+
+    // parse localStorage
+    localStorageKeys.forEach(key => {
+      parsedLocalStorage[key] = JSON.parse(localStorage[key]);
+    });
+
+
+
+
+    addToHTML(key, parsedLocalStorage[key]['category'], parsedLocalStorage[key]['subcategory'], parsedLocalStorage[key]['dateKey'], parsedLocalStorage[key]['expense']);
+  }
+  // order('newest'); // default
+
 
   // UPDATE CATEGORIES
+
 
   // UPDATE SUBCATEGORIES
 
@@ -52,54 +70,69 @@ $(document).ready(function() {
   $('#addExpense').click(function(event) {
     event.preventDefault(); // prevent refresh!
 
+    let timestamp = new Date().getTime();
     let category = $('#category')[0].value; // localStorage key
     let subcategory = $('#subcategory')[0].value; // key in local value object
     let dateKey = $('#date')[0].value;
-    let expense = parseFloat($('#amount').val()).toFixed(2); // value in array at subcategory key (of string type)
-    let storageObj = {};
-    let timestamp = new Date().getTime();
-    console.log(timestamp);
+    let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
+    let expenseObj;
 
     // if something is missing
     if (!category || !subcategory || !dateKey || !parseFloat(expense)) {
       // notify user somthing is missing
       return;
+    } else {
+      // create
+      createDataStructure(timestamp, category, subcategory, dateKey, expense);
     }
-
-    // added to localStorage
-    if (keyExists(category)) { // if category exists
-      let parsedCategory = JSON.parse(getItem(category)); // parse object
-      if (parsedCategory[subcategory]) { // if subcategory exists
-        if (parsedCategory[subcategory][dateKey]) { // if date exists
-          parsedCategory[subcategory][dateKey].push(expense) - 1;
-        } else { // if no date
-          parsedCategory[subcategory][dateKey] = [expense];
-        }
-      } else { // if no subcategory
-        parsedCategory[subcategory] = {};
-        parsedCategory[subcategory][dateKey] = [expense];
-      }
-
-      updateItem(category, JSON.stringify(parsedCategory)); // add to localStorage
-
-    } else { // if no category
-      if (category !== '') {
-        storageObj[subcategory] = {};
-        storageObj[subcategory][dateKey] = [expense];
-        createItem(category, JSON.stringify(storageObj));
-      }
-    }
-
-    // add to html
-    addToHTML(category, subcategory, dateKey, expense); // all strings
-    $('#amount').val('').focus();
   });
 
-  function addToHTML(category, subcategory, dateKey, expense) {
+
+  function createDataStructure(timestamp, category, subcategory, dateKey, expense) {
+    dateKey = dateKey.split('-');
+    let parsedLocalStorage;
+    let newExpenseObj = {};
+    newExpenseObj['timestamp'] = timestamp;
+    newExpenseObj['category'] = category;
+    newExpenseObj['subcategory'] = subcategory;
+    newExpenseObj['dateKey'] = dateKey;
+    newExpenseObj['expense'] = expense;
+
+    if (keyExists(dateKey[0])) { // if year exists
+      parsedLocalStorage = JSON.parse(getItem(dateKey[0]));
+
+      if (parsedLocalStorage[dateKey[1]]) { // if month exists
+        if (parsedLocalStorage[dateKey[1]][dateKey[2]]) { // if day exists
+          console.log('day exists');
+          parsedLocalStorage[dateKey[1]][dateKey[2]].push(newExpenseObj);
+        } else { // if day does not exist
+          console.log('day does not exist');
+          parsedLocalStorage[dateKey[1]][dateKey[2]] = [newExpenseObj];
+        }
+      } else { // if month does not exist
+        console.log('month does not exist');
+        let monthObj = {};
+        monthObj[dateKey[2]] = [newExpenseObj];
+        parsedLocalStorage[dateKey[1]] = monthObj;
+      }
+
+      updateItem(dateKey[0], JSON.stringify(parsedLocalStorage));
+    } else { // if year does not exist
+      let yearObj = {};
+      let monthObj = {};
+      monthObj[dateKey[2]] = [newExpenseObj];
+      yearObj[dateKey[1]] = monthObj;
+      createItem(dateKey[0], JSON.stringify(yearObj));
+    }
+
+    addToHTML(timestamp, category, subcategory, dateKey, expense);
+  }
+
+
+  function addToHTML(timestamp, category, subcategory, dateKey, expense) {
     // format date
-    let dateArray = dateKey.split('-');
-    let year = dateArray[0];
-    let month = dateArray[1];
+    let year = dateKey[0];
+    let month = dateKey[1];
     let monthObj = {
       '01': 'January',
       '02': 'February',
@@ -114,7 +147,7 @@ $(document).ready(function() {
       '11': 'November',
       '12': 'December'
     };
-    let day = parseInt(dateArray[2]).toString();
+    let day = parseInt(dateKey[2]).toString();
     let newDate = new Date(`${monthObj[month]} ${day} ${year}`);
     newDate = newDate.toDateString()
     newDate = newDate.split(' ');
@@ -131,8 +164,8 @@ $(document).ready(function() {
     let dateFormat = `${dayOfWeekObj[dayOfWeek]}, ${monthObj[month]} ${day}, ${year}`;
 
     // prepend to list of expenses
-    let expenses = $('#expenses');
-    expenses.prepend(`
+    let orderAndReset = $('#order-and-reset');
+    orderAndReset.after(`
     <div class="expenseItem">
       <div>
         <p>${dateFormat}</p>
@@ -140,36 +173,25 @@ $(document).ready(function() {
         <p>$${expense}</p>
       </div>
 
-      <button class="delete" data-datekey="${dateKey}" data-category="${category}" data-subcategory="${subcategory}" data-expense="${expense}">Delete</button>
+      <button class="delete" data-timestamp="${timestamp}" data-datekey="${dateKey}">Delete</button>
     </div>`);
+
+    $('#amount').val('').focus();
   }
+
 
   // DELETE
   $('#expenses').on('click', '.delete', function(event) {
-    let dataset = this.dataset;
-    let category = dataset.category;
-    let subcategory = dataset.subcategory;
-    let dateKey = dataset.datekey;
-    let parsedCategory = JSON.parse(window.localStorage.getItem(category));
-    let expenseIndex = parsedCategory[subcategory][dateKey].indexOf(dataset.expense);
+    let timestamp = this.dataset.timestamp;
+    let dateKey = this.dataset.datekey;
+    let parsedLocalStorage = JSON.parse(getItem(dateKey[0]));
+    let expenseArray = parsedLocalStorage[dateKey[1]][dateKey[2]];
 
-    // remove expense
-    parsedCategory[subcategory][dateKey].splice(expenseIndex, 1);
-
-    // if array is empty remove date
-    if (parsedCategory[subcategory][dateKey].length === 0) {
-      delete parsedCategory[subcategory][dateKey];
-    }
-    // if no more dates in subcategory, remove subcategory
-    if (Object.keys(parsedCategory[subcategory]).length === 0) {
-      delete parsedCategory[subcategory]
-    }
-    // if no more subcategories, remove localStorage key/value
-    if (Object.keys(parsedCategory).length === 0) {
-      deleteItem(category);
-    } else {
-      updateItem(category, JSON.stringify(parsedCategory));
-    }
+    expenseArray.forEach((obj, index, arr) => {
+      if (obj['timestamp'] === timestamp) {
+        arr[index].splice(index, 1);
+      }
+    });
 
     $(this).parent().remove();
   });

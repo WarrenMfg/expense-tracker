@@ -79,7 +79,6 @@ input {
 #addExpense:hover {
   color: white;
   background-color: black;
-  transform: scale(1.2);
   border-radius: 50px;
   cursor: pointer;
 }
@@ -96,10 +95,48 @@ input {
 
 #expenses {
   grid-area: expenses;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#order-and-reset {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+#newest, #oldest, #reset, .delete {
+  display: inline-block;
+  margin: 10px;
+  border-radius: 5px;
+  border: 1px solid black;
+  color: black;
+  background-color: white;
+  height: 25px;
+  width: 50px;
+  transition: all 0.2s ease;
+}
+
+#newest:hover, #oldest:hover, #reset:hover, .delete:hover {
+  color: white;
+  background-color: black;
+  border-radius: 25px;
+  cursor: pointer;
 }
 
 .expenseItem {
-  margin: 30px 0;
+  margin: 10px;
+  padding: 20px 0;
+  width: 70%;
+  border-radius: 5px;
+  box-shadow: 0 0 5px black;
+  transition: box-shadow 0.2s ease;
+}
+
+.expenseItem:hover {
+  box-shadow: 0 0 15px black;
 }
 
 .expenseItem p {
@@ -135,21 +172,7 @@ input {
 .delete {
   display: block;
   margin: 18px auto 0;
-  border-radius: 5px;
-  border: 1px solid black;
-  color: black;
-  background-color: white;
-  height: 25px;
-  width: 50px;
-  transition: all 0.2s ease;
 }
 
-.delete:hover {
-  color: white;
-  background-color: black;
-  transform: scale(1.2);
-  border-radius: 25px;
-  cursor: pointer;
-}
 
 
