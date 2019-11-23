@@ -1,3 +1,10 @@
+/*
+TODO
+- add jQuery effects when adding expense
+- add c3js graph
+- ability to add category and subcategory
+*/
+
 // Local Storage Utility Functions
 //get item
 let getItem = function(key) {
@@ -37,7 +44,7 @@ let keyExists = function(key) {
 
 $(document).ready(function() {
 
-  // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML // localStorageKeys.sort((a, b) => a - b);
+  // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML
   function orderLocalStorage(order) {
     let localStorageKeys = Object.keys(window.localStorage);
 
@@ -52,6 +59,8 @@ $(document).ready(function() {
     let expensesArray = extractExpenses(parsedLocalStorage);
     // order that array of expense objects
     let orderedExpenses = orderExpenses(order, expensesArray);
+    // make order/reset controls visible
+    $('#order-and-reset').attr('style', 'display:flex');
     // addToHTML
     orderedExpenses.forEach(expense => addToHTML(expense['timestamp'], expense['category'], expense['subcategory'], expense['dateKey'], expense['expense']));
   }
@@ -166,7 +175,6 @@ $(document).ready(function() {
 
     detachAndClearExpenses();
     orderLocalStorage(currentOrder);
-    // addToHTML(timestamp, category, subcategory, dateKey, expense);
   }
 
 
@@ -247,6 +255,7 @@ $(document).ready(function() {
       currentOrder = 'oldest';
       orderLocalStorage(currentOrder);
     } else if ($(this).attr('id') === 'reset') {
+      $(this).parent().attr('style', 'display:none');
       clearEverything();
     }
   });
@@ -264,18 +273,30 @@ $(document).ready(function() {
     expenseArray.forEach((obj, index, arr) => {
       if (obj['timestamp'] === timestamp) {
         arr.splice(index, 1);
-        // if array.length === 0
-          // delete day
-        // if month obj is empty
-          // delete month
-
-        // if year obj is empty
-          // delete year
-        // else
-          // updateItem(dateKey[0], JSON.stringify(parsedLocalStorage));
       }
     });
 
+    // if expenseArray is empty
+    if (expenseArray.length === 0) {
+      delete parsedLocalStorage[dateKey[1]][dateKey[2]];
+    }
+
+    // if month obj is empty
+    if (Object.keys(parsedLocalStorage[dateKey[1]]).length === 0) {
+      delete parsedLocalStorage[dateKey[1]];
+    }
+
+    // if year obj is empty
+    if (Object.keys(parsedLocalStorage).length === 0) {
+      deleteItem(dateKey[0]);
+      if (window.localStorage.length === 0) {
+        $('#order-and-reset').attr('style', 'display:none');
+      }
+    } else {
+      updateItem(dateKey[0], JSON.stringify(parsedLocalStorage));
+    }
+
+    // remove HTML expense div
     $(this).parent().remove();
   });
 });
