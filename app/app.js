@@ -38,28 +38,65 @@ let keyExists = function(key) {
 $(document).ready(function() {
 
   // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML // localStorageKeys.sort((a, b) => a - b);
-  function order(order) {
-    let localStorage = window.localStorage;
-    let localStorageKeys = Object.keys(localStorage);
+  function orderLocalStorage(order) {
+    let localStorageKeys = Object.keys(window.localStorage);
+
+    if (localStorageKeys.length === 0) {
+      return;
+    }
+
     let parsedLocalStorage = {};
+    localStorageKeys.forEach(key => parsedLocalStorage[key] = JSON.parse(getItem(key)));
 
-    // parse localStorage
-    localStorageKeys.forEach(key => {
-      parsedLocalStorage[key] = JSON.parse(localStorage[key]);
-    });
-
-
-
-
-    addToHTML(key, parsedLocalStorage[key]['category'], parsedLocalStorage[key]['subcategory'], parsedLocalStorage[key]['dateKey'], parsedLocalStorage[key]['expense']);
+    // extract expense objects into an array
+    let expensesArray = extractExpenses(parsedLocalStorage);
+    // order that array of expense objects
+    let orderedExpenses = orderExpenses(order, expensesArray);
+    // addToHTML
+    orderedExpenses.forEach(expense => addToHTML(expense['timestamp'], expense['category'], expense['subcategory'], expense['dateKey'], expense['expense']));
   }
-  // order('newest'); // default
+  let currentOrder = 'newest'; // default
+  orderLocalStorage(currentOrder);
 
 
-  // UPDATE CATEGORIES
 
 
-  // UPDATE SUBCATEGORIES
+  // EXTRACT EXPENSES FROM LOCALSTORAGE TO ORDER THEM
+  function extractExpenses(item) {
+    let expenseObjectsArray = [];
+
+    for (let key in item) {
+      if (Array.isArray(item[key])) {
+        item[key].forEach(expense => {
+          let expenseObjectCopy = {};
+          for (let field in expense) {
+            if (Array.isArray(expense[field])) {
+              expenseObjectCopy[field] = expense[field].slice();
+            }
+            expenseObjectCopy[field] = expense[field];
+          }
+          expenseObjectsArray.push(expenseObjectCopy);
+        });
+      } else if (typeof item[key] === 'object') {
+        expenseObjectsArray = expenseObjectsArray.concat(extractExpenses(item[key]));
+      }
+    }
+
+    return expenseObjectsArray;
+  };
+
+
+
+
+  // ORDER EXPENSES ARRAY BEFORE addToHTML
+  function orderExpenses(order, array) {
+    if (order === 'newest') {
+      return array.sort((a, b) => parseInt(a['dateKey'].join(''), 10) - parseInt(b['dateKey'].join(''), 10));
+    } else if (order === 'oldest') {
+      return array.sort((a, b) => parseInt(b['dateKey'].join(''), 10) - parseInt(a['dateKey'].join(''), 10));
+    }
+  }
+
 
 
 
@@ -70,6 +107,7 @@ $(document).ready(function() {
   $('#addExpense').click(function(event) {
     event.preventDefault(); // prevent refresh!
 
+    // collect the input
     let timestamp = new Date().getTime();
     let category = $('#category')[0].value; // localStorage key
     let subcategory = $('#subcategory')[0].value; // key in local value object
@@ -82,12 +120,16 @@ $(document).ready(function() {
       // notify user somthing is missing
       return;
     } else {
-      // create
+      // create or update data structure
       createDataStructure(timestamp, category, subcategory, dateKey, expense);
+      $('#amount').val('').focus();
     }
   });
 
 
+
+
+  // CREATE OR UPDATE DATA STRUCTURE AFTER ADDING NEW EXPENSE
   function createDataStructure(timestamp, category, subcategory, dateKey, expense) {
     dateKey = dateKey.split('-');
     let parsedLocalStorage;
@@ -103,14 +145,11 @@ $(document).ready(function() {
 
       if (parsedLocalStorage[dateKey[1]]) { // if month exists
         if (parsedLocalStorage[dateKey[1]][dateKey[2]]) { // if day exists
-          console.log('day exists');
           parsedLocalStorage[dateKey[1]][dateKey[2]].push(newExpenseObj);
         } else { // if day does not exist
-          console.log('day does not exist');
           parsedLocalStorage[dateKey[1]][dateKey[2]] = [newExpenseObj];
         }
       } else { // if month does not exist
-        console.log('month does not exist');
         let monthObj = {};
         monthObj[dateKey[2]] = [newExpenseObj];
         parsedLocalStorage[dateKey[1]] = monthObj;
@@ -125,13 +164,18 @@ $(document).ready(function() {
       createItem(dateKey[0], JSON.stringify(yearObj));
     }
 
-    addToHTML(timestamp, category, subcategory, dateKey, expense);
+    detachAndClearExpenses();
+    orderLocalStorage(currentOrder);
+    // addToHTML(timestamp, category, subcategory, dateKey, expense);
   }
 
 
+
+
+  // DISPLAY EXPENSES
   function addToHTML(timestamp, category, subcategory, dateKey, expense) {
     // format date
-    let year = dateKey[0];
+    let year = dateKey[0]; // at this point dateKey is an array, not a string
     let month = dateKey[1];
     let monthObj = {
       '01': 'January',
@@ -147,7 +191,7 @@ $(document).ready(function() {
       '11': 'November',
       '12': 'December'
     };
-    let day = parseInt(dateKey[2]).toString();
+    let day = parseInt(dateKey[2], 10).toString();
     let newDate = new Date(`${monthObj[month]} ${day} ${year}`);
     newDate = newDate.toDateString()
     newDate = newDate.split(' ');
@@ -162,6 +206,7 @@ $(document).ready(function() {
       'Sat': 'Saturday'
     };
     let dateFormat = `${dayOfWeekObj[dayOfWeek]}, ${monthObj[month]} ${day}, ${year}`;
+    dateKey = dateKey.join('-');
 
     // prepend to list of expenses
     let orderAndReset = $('#order-and-reset');
@@ -175,24 +220,72 @@ $(document).ready(function() {
 
       <button class="delete" data-timestamp="${timestamp}" data-datekey="${dateKey}">Delete</button>
     </div>`);
-
-    $('#amount').val('').focus();
   }
+
+
+
+
+  // DETACH AND CLEAR EXPENSES
+  function detachAndClearExpenses() {
+    let orderAndReset = $('#order-and-reset').detach();
+    let expenses = $('#expenses');
+    expenses.empty();
+    expenses.prepend(orderAndReset);
+  }
+
+
+
+
+  // ORDER AND RESET
+  $('#order-and-reset').on('click', 'button', function(event) {
+    detachAndClearExpenses();
+
+    if ($(this).attr('id') === 'newest') {
+      currentOrder = 'newest';
+      orderLocalStorage(currentOrder);
+    } else if ($(this).attr('id') === 'oldest') {
+      currentOrder = 'oldest';
+      orderLocalStorage(currentOrder);
+    } else if ($(this).attr('id') === 'reset') {
+      clearEverything();
+    }
+  });
+
+
 
 
   // DELETE
   $('#expenses').on('click', '.delete', function(event) {
-    let timestamp = this.dataset.timestamp;
-    let dateKey = this.dataset.datekey;
+    let timestamp = parseInt(this.dataset.timestamp, 10);
+    let dateKey = this.dataset.datekey.split('-');
     let parsedLocalStorage = JSON.parse(getItem(dateKey[0]));
     let expenseArray = parsedLocalStorage[dateKey[1]][dateKey[2]];
 
     expenseArray.forEach((obj, index, arr) => {
       if (obj['timestamp'] === timestamp) {
-        arr[index].splice(index, 1);
+        arr.splice(index, 1);
+        // if array.length === 0
+          // delete day
+        // if month obj is empty
+          // delete month
+
+        // if year obj is empty
+          // delete year
+        // else
+          // updateItem(dateKey[0], JSON.stringify(parsedLocalStorage));
       }
     });
 
     $(this).parent().remove();
   });
 });
+
+
+
+
+  // UPDATE CATEGORIES
+
+
+
+
+  // UPDATE SUBCATEGORIES
