@@ -3,6 +3,7 @@ TODO
 - add jQuery effects when adding expense
 - add c3js graph
 - ability to add category and subcategory
+- add indication of current expense order
 */
 
 // Local Storage Utility Functions
@@ -40,20 +41,42 @@ let keyExists = function(key) {
 
 
 
-
-
 $(document).ready(function() {
+
+  // LOAD userPrefs INTO LOCALSTORAGE
+  let userPrefs = []; // 0: order, 1: obj with category keys with subcat values arr
+  if (!keyExists('userPrefs')) {
+    userPrefs.push('newest');
+    createItem('userPrefs', JSON.stringify(userPrefs));
+  }
+
+  function userOrder(order) {
+    let storedUserPrefs = JSON.parse(getItem('userPrefs'));
+    if (arguments.length === 0) { // getter
+      return storedUserPrefs[0];
+    } else { // setter
+      storedUserPrefs[0] = order;
+      updateItem('userPrefs', JSON.stringify(storedUserPrefs));
+    }
+  }
+
+
+
 
   // ONLOAD: READ LOCALSTORAGE AND UPDATE HTML
   function orderLocalStorage(order) {
     let localStorageKeys = Object.keys(window.localStorage);
 
-    if (localStorageKeys.length === 0) {
+    if (localStorageKeys.length === 1) { // if only key is userPrefs
       return;
     }
 
     let parsedLocalStorage = {};
-    localStorageKeys.forEach(key => parsedLocalStorage[key] = JSON.parse(getItem(key)));
+    localStorageKeys.forEach(key => {
+      if (key !== 'userPrefs') {
+        parsedLocalStorage[key] = JSON.parse(getItem(key));
+      }
+    });
 
     // extract expense objects into an array
     let expensesArray = extractExpenses(parsedLocalStorage);
@@ -64,8 +87,7 @@ $(document).ready(function() {
     // addToHTML
     orderedExpenses.forEach(expense => addToHTML(expense['timestamp'], expense['category'], expense['subcategory'], expense['dateKey'], expense['expense']));
   }
-  let currentOrder = 'newest'; // default
-  orderLocalStorage(currentOrder);
+  orderLocalStorage(userOrder());
 
 
 
@@ -174,7 +196,7 @@ $(document).ready(function() {
     }
 
     detachAndClearExpenses();
-    orderLocalStorage(currentOrder);
+    orderLocalStorage(userOrder());
   }
 
 
@@ -249,21 +271,23 @@ $(document).ready(function() {
     detachAndClearExpenses();
 
     if ($(this).attr('id') === 'newest') {
-      currentOrder = 'newest';
-      orderLocalStorage(currentOrder);
+      userOrder('newest'); // set userPref
+      orderLocalStorage('newest');
     } else if ($(this).attr('id') === 'oldest') {
-      currentOrder = 'oldest';
-      orderLocalStorage(currentOrder);
+      userOrder('oldest'); // set userPref
+      orderLocalStorage('oldest');
     } else if ($(this).attr('id') === 'reset') {
       $(this).parent().attr('style', 'display:none');
+      let userPrefs = getItem('userPrefs'); // local userPrefs variable
       clearEverything();
+      createItem('userPrefs', userPrefs);
     }
   });
 
 
 
 
-  // DELETE
+  // DELETE INDIVIDUAL EXPENSES
   $('#expenses').on('click', '.delete', function(event) {
     let timestamp = parseInt(this.dataset.timestamp, 10);
     let dateKey = this.dataset.datekey.split('-');
@@ -289,7 +313,7 @@ $(document).ready(function() {
     // if year obj is empty
     if (Object.keys(parsedLocalStorage).length === 0) {
       deleteItem(dateKey[0]);
-      if (window.localStorage.length === 0) {
+      if (window.localStorage.length === 1) {
         $('#order-and-reset').attr('style', 'display:none');
       }
     } else {
@@ -299,14 +323,39 @@ $(document).ready(function() {
     // remove HTML expense div
     $(this).parent().remove();
   });
-});
 
 
 
 
-  // UPDATE CATEGORIES
+  // CATEGORY - SHOW INPUT
+  // $('form').on('click', function(event) {
+  //   if (event.target.className === 'far fa-plus-square') {
+  //     showCategoryInput();
+  //   } else if (event.target.className === 'far fa-minus-square') {
+  //     removeCategory();
+  //   }
+  // });
 
+  // function addCategory() {
+  //   // select id 'category'
+  //   let select = $('#category');
+  //   let parent = $('#category-div');
+  //   // remove it
+  //   select.attr('style', 'display:none');
+  //   // add input field
+  //   parent.append(
+  //     `<input id="add-cat" type="text">`
+  //   );
+  //   $('#add-cat').focus();
+  // }
 
+  // $()
 
 
   // UPDATE SUBCATEGORIES
+
+
+
+
+  // when deleting categories/subcategories, must delete related expenses too
+});

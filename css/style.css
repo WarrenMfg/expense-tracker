@@ -41,7 +41,7 @@ form p {
   margin-bottom: 5px;
 }
 
-select {
+select, #add-cat {
   width: 75%;
   height: 24px;
   border: 2px solid rgb(220, 220, 220);
