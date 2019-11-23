@@ -18,22 +18,16 @@
   <form>
 
     <div id="category-div">
-      <p>Category <i class="far fa-plus-square"></i> <i class="far fa-minus-square"></i></p>
+      <p>Category <i class="far fa-plus-square" id="add-cat"></i> <i class="far fa-minus-square" id="minus-cat"></i></p>
       <select id="category" required>
         <option value=""></option>
-        <option value="Vehicle">Vehicle</option>
-        <option value="Food">Food</option>
-        <option value="Home">Home</option>
       </select>
     </div>
 
     <div id="subcategory-div">
-      <p>Subcategory <i class="far fa-plus-square"></i> <i class="far fa-minus-square"></i></p>
+      <p>Subcategory <i class="far fa-plus-square" id="add-sub"></i> <i class="far fa-minus-square" id="minus-sub"></i></p>
       <select id="subcategory" required>
         <option value=""></option>
-        <option value="Personal">Personal</option>
-        <option value="Maintenance">Maintenance</option>
-        <option value="Bill">Bill</option>
       </select>
     </div>
 
@@ -43,7 +37,7 @@
     </div>
 
     <div id="amount-div">
-      <p>&nbsp;&nbsp;Amount</p>
+      <p>Amount</p>
       <span id="dollar-sign">$</span><input id="amount" type="text" placeholder="Amount" required>
     </div>
 

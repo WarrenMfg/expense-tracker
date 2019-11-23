@@ -4,6 +4,8 @@ TODO
 - add c3js graph
 - ability to add category and subcategory
 - add indication of current expense order
+- edit category and subcategory names
+- validation, when adding cat and subcat, to prohibit overwritting duplicate category
 */
 
 // Local Storage Utility Functions
@@ -46,17 +48,20 @@ $(document).ready(function() {
   // LOAD userPrefs INTO LOCALSTORAGE
   let userPrefs = []; // 0: order, 1: obj with category keys with subcat values arr
   if (!keyExists('userPrefs')) {
-    userPrefs.push('newest');
+    userPrefs.push('newest'); // default
+    userPrefs.push({});
     createItem('userPrefs', JSON.stringify(userPrefs));
+  } else {
+    loadCategoriesToCategorySelectOption();
   }
 
   function userOrder(order) {
-    let storedUserPrefs = JSON.parse(getItem('userPrefs'));
+    let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     if (arguments.length === 0) { // getter
-      return storedUserPrefs[0];
+      return parsedUserPrefs[0];
     } else { // setter
-      storedUserPrefs[0] = order;
-      updateItem('userPrefs', JSON.stringify(storedUserPrefs));
+      parsedUserPrefs[0] = order;
+      updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
     }
   }
 
@@ -140,8 +145,8 @@ $(document).ready(function() {
 
     // collect the input
     let timestamp = new Date().getTime();
-    let category = $('#category')[0].value; // localStorage key
-    let subcategory = $('#subcategory')[0].value; // key in local value object
+    let category = $('#category')[0].value;
+    let subcategory = $('#subcategory')[0].value;
     let dateKey = $('#date')[0].value;
     let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
     let expenseObj;
@@ -328,28 +333,116 @@ $(document).ready(function() {
 
 
   // CATEGORY - SHOW INPUT
-  // $('form').on('click', function(event) {
-  //   if (event.target.className === 'far fa-plus-square') {
-  //     showCategoryInput();
-  //   } else if (event.target.className === 'far fa-minus-square') {
-  //     removeCategory();
-  //   }
-  // });
+  $('form').on('click', 'i', function(event) {
+    if (event.target.id === 'add-cat') {
+      if ($('#category').attr('style') !== 'display:none') {
+        showOrHideBothInputs();
+      } else {
+        showOrHideBothInputs();
+      }
+    } else if (event.target.id === 'minus-cat') {
+      console.log('minus-cat');
+    } else if (event.target.id === 'add-sub') {
+      console.log('add-sub');
+    } else if (event.target.id === 'minus-sub') {
+      console.log('minus-sub');
+    }
+  });
 
-  // function addCategory() {
-  //   // select id 'category'
-  //   let select = $('#category');
-  //   let parent = $('#category-div');
-  //   // remove it
-  //   select.attr('style', 'display:none');
-  //   // add input field
-  //   parent.append(
-  //     `<input id="add-cat" type="text">`
-  //   );
-  //   $('#add-cat').focus();
-  // }
+  function showOrHideBothInputs() {
+    let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
+    let catParent = $('#category-div');
+    let subParent = $('#subcategory-div');
 
-  // $()
+    if (catSelectElement.attr('style') === 'display:none') { // hide inputs
+      $('#cat-input').remove();
+      $('#sub-input').remove();
+      catSelectElement.removeAttr('style');
+      subSelectElement.removeAttr('style');
+    } else { // show inputs
+      catSelectElement.attr('style', 'display:none');
+      subSelectElement.attr('style', 'display:none');
+
+      catParent.append(
+        `<input id="cat-input" type="text" placeholder="Add a Category">`
+      );
+      subParent.append(
+        `<input id="sub-input" type="text" placeholder="Add a Subcategory">`
+      );
+
+      $('#cat-input').focus();
+    }
+  }
+
+  $('#subcategory-div').on('keyup', '#sub-input', function(event) {
+    if (event.keyCode === 13) {
+      let catInput = $('#cat-input')[0].value;
+      let subInput = $('#sub-input')[0].value;
+      let bothHaveValues = !!catInput && !!subInput;
+
+      if (bothHaveValues) {
+        addCategoryAndSubcategoryToUserPrefs(catInput, subInput);
+        loadCategoriesToCategorySelectOption();
+        showOrHideBothInputs();
+      }
+    }
+  });
+
+  function addCategoryAndSubcategoryToUserPrefs(category, subcategory) {
+    let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
+    let categories = parsedUserPrefs[1];
+
+    categories[category] = [subcategory];
+    parsedUserPrefs[1] = categories;
+    updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+  }
+
+  function loadCategoriesToCategorySelectOption() {
+    let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
+    let categoriesArray = Object.keys(parsedUserPrefs[1]);
+    let categorySelectElement = $('#category');
+
+    // empty current options to prevent duplicates
+    let blankOption = categorySelectElement.children().first().detach();
+    categorySelectElement.empty();
+    categorySelectElement.prepend(blankOption);
+
+    // add all categories
+    categoriesArray.forEach(category => {
+      categorySelectElement.append(`
+      <option value="${category}">${category}</option>
+      `);
+    });
+  }
+
+  // change subcategories based on selected category
+  $('#category').change(function(event) {
+    let blankOption;
+    let subcategorySelectElement = $('#subcategory');
+    let chosenCategory = event.target.value;
+
+    // empty current options to prevent duplicates
+    blankOption = subcategorySelectElement.children().first().detach();
+    subcategorySelectElement.empty();
+    subcategorySelectElement.prepend(blankOption);
+
+    if (chosenCategory === '') {
+      return;
+    }
+
+    let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
+    let subcategories = parsedUserPrefs[1][chosenCategory];
+
+    subcategories.forEach(subcategory => {
+      subcategorySelectElement.append(`
+        <option value="${subcategory}">${subcategory}</option>
+      `);
+    });
+  });
+
+
+
 
 
   // UPDATE SUBCATEGORIES
