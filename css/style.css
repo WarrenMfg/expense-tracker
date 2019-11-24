@@ -19,6 +19,8 @@ h1 {
   margin: 0;
   background-color: var(--blue);
   color: white;
+  letter-spacing: 2px;
+  font-weight: 300;
 }
 
 form {

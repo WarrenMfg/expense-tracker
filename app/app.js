@@ -2,10 +2,11 @@
 TODO
 - add jQuery effects when adding expense
 - add c3js graph
-- ability to add category and subcategory
+- ability to delete category and subcategory
 - add indication of current expense order
 - edit category and subcategory names
-- validation, when adding cat and subcat, to prohibit overwritting duplicate category
+- validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
+- reorder categories and subcategories alphabetically, while still selecting them after adding them
 */
 
 // Local Storage Utility Functions
@@ -332,35 +333,46 @@ $(document).ready(function() {
 
 
 
-  // CATEGORY - SHOW INPUT
+  // ADD CATEGORY/SUBCATEGORY
   $('form').on('click', 'i', function(event) {
     if (event.target.id === 'add-cat') {
-      if ($('#category').attr('style') !== 'display:none') {
-        showOrHideBothInputs();
-      } else {
-        showOrHideBothInputs();
-      }
+      showOrHideBothInputs();
     } else if (event.target.id === 'minus-cat') {
       console.log('minus-cat');
     } else if (event.target.id === 'add-sub') {
-      console.log('add-sub');
+      showOrHideSubcategoryInput();
     } else if (event.target.id === 'minus-sub') {
       console.log('minus-sub');
     }
   });
 
-  function showOrHideBothInputs() {
+  function showOrHideBothInputs(addedCategory, addedSubcategory) { // address clicking both add buttons
     let catSelectElement = $('#category');
     let subSelectElement = $('#subcategory');
     let catParent = $('#category-div');
     let subParent = $('#subcategory-div');
 
-    if (catSelectElement.attr('style') === 'display:none') { // hide inputs
+    if (catSelectElement.attr('style') === undefined && subSelectElement.attr('style') === 'display:none') {
+      catSelectElement.attr('style', 'display:none');
+      catParent.append(
+        `<input id="cat-input" type="text" placeholder="Add a Category">`
+      );
+      $('#cat-input').focus();
+      return;
+    }
+
+    if (catSelectElement.attr('style') === 'display:none') { // hide inputs, show selects
       $('#cat-input').remove();
       $('#sub-input').remove();
       catSelectElement.removeAttr('style');
       subSelectElement.removeAttr('style');
-    } else { // show inputs
+      // if category was entered
+      if (arguments.length > 0) {
+        catSelectElement[0].selectedIndex = catSelectElement[0].children.length - 1;
+        refreshSubcategories(addedCategory, addedSubcategory);
+        subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
+      }
+    } else { // hide selects, show inputs
       catSelectElement.attr('style', 'display:none');
       subSelectElement.attr('style', 'display:none');
 
@@ -375,16 +387,60 @@ $(document).ready(function() {
     }
   }
 
+  function showOrHideSubcategoryInput(selectedCategory, addedSubcategory) { // address clicking both add buttons
+    let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
+    let subParent = $('#subcategory-div');
+
+    if (catSelectElement.attr('style') === 'display:none' && subSelectElement.attr('style') === 'display:none') {
+      $('#cat-input').remove();
+      catSelectElement.removeAttr('style');
+      $('#sub-input').focus();
+      return;
+    }
+
+    if (subSelectElement.attr('style') === 'display:none') { // hide input, show select
+      $('#sub-input').remove();
+      subSelectElement.removeAttr('style');
+      // if subcategory was entered
+      if (arguments.length > 0) {
+        refreshSubcategories(selectedCategory, addedSubcategory);
+        subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
+      }
+    } else { // hide select, show input
+      subSelectElement.attr('style', 'display:none');
+      subParent.append(
+        `<input id="sub-input" type="text" placeholder="Add a Subcategory">`
+      );
+
+      $('#sub-input').focus();
+    }
+  }
+
+  // on category and/or subcategory input (using enter key)
   $('#subcategory-div').on('keyup', '#sub-input', function(event) {
     if (event.keyCode === 13) {
-      let catInput = $('#cat-input')[0].value;
+      let catSelectElement = $('#category');
       let subInput = $('#sub-input')[0].value;
-      let bothHaveValues = !!catInput && !!subInput;
 
-      if (bothHaveValues) {
-        addCategoryAndSubcategoryToUserPrefs(catInput, subInput);
-        loadCategoriesToCategorySelectOption();
-        showOrHideBothInputs();
+      // if both inputs are visible (adding a category and subcategory)
+      if (catSelectElement.attr('style') === 'display:none') {
+        let catInput = $('#cat-input')[0].value;
+        let bothHaveValues = !!catInput && !!subInput;
+        if (bothHaveValues) {
+          addCategoryAndSubcategoryToUserPrefs(catInput, subInput);
+          loadCategoriesToCategorySelectOption();
+          showOrHideBothInputs(catInput, subInput);
+        } else {
+          // inform user
+        }
+      } else {
+        if (catSelectElement[0].value !== '' && !!subInput) {
+          addSubcategoryToCategory(catSelectElement[0].value, subInput);
+          showOrHideSubcategoryInput(catSelectElement[0].value, subInput);
+        } else {
+          // inform user
+        }
       }
     }
   });
@@ -394,6 +450,15 @@ $(document).ready(function() {
     let categories = parsedUserPrefs[1];
 
     categories[category] = [subcategory];
+    parsedUserPrefs[1] = categories;
+    updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+  }
+
+  function addSubcategoryToCategory(category, subcategory) {
+    let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
+    let categories = parsedUserPrefs[1];
+
+    categories[category].push(subcategory);
     parsedUserPrefs[1] = categories;
     updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
   }
@@ -418,16 +483,25 @@ $(document).ready(function() {
 
   // change subcategories based on selected category
   $('#category').change(function(event) {
+    refreshSubcategories(event);
+  });
+
+  function refreshSubcategories(event, addedSubcategory) {
     let blankOption;
     let subcategorySelectElement = $('#subcategory');
-    let chosenCategory = event.target.value;
+    let chosenCategory; // can I use: chosenCategory = event.target.value || event
 
+    if (typeof event === 'object') {
+      chosenCategory = event.target.value;
+    } else {
+      chosenCategory = event;
+    }
     // empty current options to prevent duplicates
     blankOption = subcategorySelectElement.children().first().detach();
     subcategorySelectElement.empty();
     subcategorySelectElement.prepend(blankOption);
 
-    if (chosenCategory === '') {
+    if (chosenCategory === '' || chosenCategory === undefined) {
       return;
     }
 
@@ -439,9 +513,7 @@ $(document).ready(function() {
         <option value="${subcategory}">${subcategory}</option>
       `);
     });
-  });
-
-
+  }
 
 
 
