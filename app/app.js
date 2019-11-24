@@ -370,9 +370,11 @@ $(document).ready(function() {
       subSelectElement.removeAttr('class'); // may not need
       // if category was entered
       if (arguments.length > 0) {
-        catSelectElement[0].selectedIndex = catSelectElement[0].children.length - 1;
+        let catOptionIndex = catSelectElement.find(`option[value=${addedCategory}]`)[0].index;
+        catSelectElement[0].selectedIndex = catOptionIndex;
         refreshSubcategories(addedCategory, addedSubcategory);
-        subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
+        let subOptionIndex = subSelectElement.find(`option[value=${addedSubcategory}]`)[0].index;
+        subSelectElement[0].selectedIndex = subOptionIndex;
       }
     } else { // remove selects, show inputs
       catSelectElement.attr('class', 'hidden');
@@ -407,7 +409,8 @@ $(document).ready(function() {
       // if new subcategory was entered, arguments will be passed in
       if (arguments.length > 0) {
         refreshSubcategories(selectedCategory, addedSubcategory);
-        subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
+        let subOptionIndex = subSelectElement.find(`option[value=${addedSubcategory}]`)[0].index;
+        subSelectElement[0].selectedIndex = subOptionIndex;
       }
     } else { // remove select, show input
       subSelectElement.attr('class', 'hidden');
@@ -430,9 +433,9 @@ $(document).ready(function() {
         let catInput = $('#cat-input');
         let bothHaveValues = !!catInput[0].value && !!subInput[0].value;
         if (bothHaveValues) {
-          addCategoryAndSubcategoryToUserPrefs(catInput[0].value, subInput[0].value);
+          let titleCaseArray = addCategoryAndSubcategoryToUserPrefs(catInput[0].value, subInput[0].value);
           loadCategoriesToCategorySelectOption();
-          showOrHideBothInputs(catInput[0].value, subInput[0].value);
+          showOrHideBothInputs(titleCaseArray[0], titleCaseArray[1]);
         } else {
           if (!catInput[0].value && !subInput[0].value) {
             inputFeedback('catInput', 'subInput');
@@ -444,8 +447,8 @@ $(document).ready(function() {
         }
       } else { // just adding subcategory
         if (catSelectElement[0].value !== '' && !!subInput[0].value) {
-          addSubcategoryToCategory(catSelectElement[0].value, subInput[0].value);
-          showOrHideSubcategoryInput(catSelectElement[0].value, subInput[0].value);
+          let titleCaseSubInput = addSubcategoryToCategory(catSelectElement[0].value, subInput[0].value);
+          showOrHideSubcategoryInput(catSelectElement[0].value, titleCaseSubInput);
         } else {
           if (catSelectElement[0].value === '') {
             inputFeedback('catSelectElement');
@@ -461,19 +464,33 @@ $(document).ready(function() {
   function addCategoryAndSubcategoryToUserPrefs(category, subcategory) {
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let categories = parsedUserPrefs[1];
+    let argumentsArray = [category, subcategory];
 
-    categories[category] = [subcategory];
+    // title case
+    argumentsArray = argumentsArray.map(string => {
+      string = string.toLowerCase();
+      string = string.charAt(0).toUpperCase() + string.slice(1);
+      return string;
+    });
+
+    categories[argumentsArray[0]] = [argumentsArray[1]];
     parsedUserPrefs[1] = categories;
     updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+    return argumentsArray;
   }
 
   function addSubcategoryToCategory(category, subcategory) {
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let categories = parsedUserPrefs[1];
 
+    // title case
+    subcategory = subcategory.toLowerCase();
+    subcategory = subcategory.charAt(0).toUpperCase() + subcategory.slice(1);
+
     categories[category].push(subcategory);
     parsedUserPrefs[1] = categories;
     updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+    return subcategory;
   }
 
   function loadCategoriesToCategorySelectOption() {
@@ -486,7 +503,9 @@ $(document).ready(function() {
     categorySelectElement.empty();
     categorySelectElement.prepend(blankOption);
 
+
     // add all categories
+    categoriesArray.sort();
     categoriesArray.forEach(category => {
       categorySelectElement.append(`
       <option value="${category}">${category}</option>
@@ -510,13 +529,13 @@ $(document).ready(function() {
     subcategorySelectElement.prepend(blankOption);
 
     if (chosenCategory === '' || chosenCategory === undefined) {
-      console.log('chosenCategory is falsy');
       return;
     }
 
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let subcategories = parsedUserPrefs[1][chosenCategory];
 
+    subcategories.sort();
     subcategories.forEach(subcategory => {
       subcategorySelectElement.append(`
         <option value="${subcategory}">${subcategory}</option>
