@@ -7,6 +7,7 @@ TODO
 - edit category and subcategory names
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - reorder categories and subcategories alphabetically, while still selecting them after adding them
+- utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 */
 
 // Local Storage Utility Functions
@@ -338,7 +339,7 @@ $(document).ready(function() {
     if (event.target.id === 'add-cat') {
       showOrHideBothInputs();
     } else if (event.target.id === 'minus-cat') {
-      console.log('minus-cat');
+      deleteCategory('minus-cat');
     } else if (event.target.id === 'add-sub') {
       showOrHideSubcategoryInput();
     } else if (event.target.id === 'minus-sub') {
@@ -568,6 +569,19 @@ $(document).ready(function() {
 
 
 
+
+  // DELETE CATEGORY/SUBCATEGORY
+  function deleteCategory(flyout) {
+    // make both hidden/remove both flyouts
+    // if flyout is 'minus-cat'
+      // get categories
+      // add to flyout with delete x button
+      // show 'minus-cat' flyout
+  }
+
+
+
+  // when category is deleted loadCategoriesToCategorySelectOption()
 
   // UPDATE SUBCATEGORIES
 
