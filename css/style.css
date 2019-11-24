@@ -47,6 +47,10 @@ form p {
   margin-left: 14px;
 }
 
+.hidden {
+  display: none;
+}
+
 select, #cat-input, #sub-input {
   width: 75%;
   height: 24px;

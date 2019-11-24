@@ -353,8 +353,8 @@ $(document).ready(function() {
     let subParent = $('#subcategory-div');
 
     // if previously clicked subcategory plus button, then clicked category plus button
-    if (catSelectElement.attr('style') === undefined && subSelectElement.attr('style') === 'display:none') {
-      catSelectElement.attr('style', 'display:none');
+    if (catSelectElement.attr('class') === undefined && subSelectElement.attr('class') === 'hidden') {
+      catSelectElement.attr('class', 'hidden');
       catParent.append(
         `<input id="cat-input" type="text" placeholder="Add a Category">`
       );
@@ -362,20 +362,20 @@ $(document).ready(function() {
       return;
     }
 
-    if (catSelectElement.attr('style') === 'display:none') { // hide inputs, show selects
+    if (catSelectElement.attr('class') === 'hidden') { // remove inputs, show selects
       $('#cat-input').remove();
       $('#sub-input').remove();
-      catSelectElement.removeAttr('style');
-      subSelectElement.removeAttr('style');
+      catSelectElement.removeAttr('class'); // may not need
+      subSelectElement.removeAttr('class'); // may not need
       // if category was entered
       if (arguments.length > 0) {
         catSelectElement[0].selectedIndex = catSelectElement[0].children.length - 1;
         refreshSubcategories(addedCategory, addedSubcategory);
         subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
       }
-    } else { // hide selects, show inputs
-      catSelectElement.attr('style', 'display:none');
-      subSelectElement.attr('style', 'display:none');
+    } else { // remove selects, show inputs
+      catSelectElement.attr('class', 'hidden');
+      subSelectElement.attr('class', 'hidden');
 
       catParent.append(
         `<input id="cat-input" type="text" placeholder="Add a Category">`
@@ -393,23 +393,23 @@ $(document).ready(function() {
     let subSelectElement = $('#subcategory');
     let subParent = $('#subcategory-div');
 
-    if (catSelectElement.attr('style') === 'display:none' && subSelectElement.attr('style') === 'display:none') {
+    if (catSelectElement.attr('class') === 'hidden' && subSelectElement.attr('class') === 'hidden') {
       $('#cat-input').remove();
-      catSelectElement.removeAttr('style');
+      catSelectElement.removeAttr('class');
       $('#sub-input').focus();
       return;
     }
 
-    if (subSelectElement.attr('style') === 'display:none') { // hide input, show select
+    if (subSelectElement.attr('class') === 'hidden') { // remove input, show select
       $('#sub-input').remove();
-      subSelectElement.removeAttr('style');
+      subSelectElement.removeAttr('class');
       // if new subcategory was entered, arguments will be passed in
       if (arguments.length > 0) {
         refreshSubcategories(selectedCategory, addedSubcategory);
         subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
       }
-    } else { // hide select, show input
-      subSelectElement.attr('style', 'display:none');
+    } else { // remove select, show input
+      subSelectElement.attr('class', 'hidden');
       subParent.append(
         `<input id="sub-input" type="text" placeholder="Add a Subcategory">`
       );
@@ -425,7 +425,7 @@ $(document).ready(function() {
       let subInput = $('#sub-input');
 
       // if both inputs are visible (adding a category and subcategory)
-      if (catSelectElement.attr('style') === 'display:none') {
+      if (catSelectElement.attr('class') === 'hidden') {
         let catInput = $('#cat-input');
         let bothHaveValues = !!catInput[0].value && !!subInput[0].value;
         if (bothHaveValues) {
@@ -433,10 +433,11 @@ $(document).ready(function() {
           loadCategoriesToCategorySelectOption();
           showOrHideBothInputs(catInput[0].value, subInput[0].value);
         } else {
-          if (!catInput[0].value) {
+          if (!catInput[0].value && !subInput[0].value) {
+            inputFeedback('catInput', 'subInput');
+          } else if (!catInput[0].value) {
             inputFeedback('catInput');
-          }
-          if (!subInput[0].value) {
+          } else if (!subInput[0].value) {
             inputFeedback(null, 'subInput');
           }
         }
