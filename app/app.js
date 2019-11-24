@@ -346,12 +346,13 @@ $(document).ready(function() {
     }
   });
 
-  function showOrHideBothInputs(addedCategory, addedSubcategory) { // address clicking both add buttons
+  function showOrHideBothInputs(addedCategory, addedSubcategory) {
     let catSelectElement = $('#category');
     let subSelectElement = $('#subcategory');
     let catParent = $('#category-div');
     let subParent = $('#subcategory-div');
 
+    // if previously clicked subcategory plus button, then clicked category plus button
     if (catSelectElement.attr('style') === undefined && subSelectElement.attr('style') === 'display:none') {
       catSelectElement.attr('style', 'display:none');
       catParent.append(
@@ -387,7 +388,7 @@ $(document).ready(function() {
     }
   }
 
-  function showOrHideSubcategoryInput(selectedCategory, addedSubcategory) { // address clicking both add buttons
+  function showOrHideSubcategoryInput(selectedCategory, addedSubcategory) {
     let catSelectElement = $('#category');
     let subSelectElement = $('#subcategory');
     let subParent = $('#subcategory-div');
@@ -402,7 +403,7 @@ $(document).ready(function() {
     if (subSelectElement.attr('style') === 'display:none') { // hide input, show select
       $('#sub-input').remove();
       subSelectElement.removeAttr('style');
-      // if subcategory was entered
+      // if new subcategory was entered, arguments will be passed in
       if (arguments.length > 0) {
         refreshSubcategories(selectedCategory, addedSubcategory);
         subSelectElement[0].selectedIndex = subSelectElement[0].children.length - 1;
@@ -421,25 +422,35 @@ $(document).ready(function() {
   $('#subcategory-div').on('keyup', '#sub-input', function(event) {
     if (event.keyCode === 13) {
       let catSelectElement = $('#category');
-      let subInput = $('#sub-input')[0].value;
+      let subInput = $('#sub-input');
 
       // if both inputs are visible (adding a category and subcategory)
       if (catSelectElement.attr('style') === 'display:none') {
-        let catInput = $('#cat-input')[0].value;
-        let bothHaveValues = !!catInput && !!subInput;
+        let catInput = $('#cat-input');
+        let bothHaveValues = !!catInput[0].value && !!subInput[0].value;
         if (bothHaveValues) {
-          addCategoryAndSubcategoryToUserPrefs(catInput, subInput);
+          addCategoryAndSubcategoryToUserPrefs(catInput[0].value, subInput[0].value);
           loadCategoriesToCategorySelectOption();
-          showOrHideBothInputs(catInput, subInput);
+          showOrHideBothInputs(catInput[0].value, subInput[0].value);
         } else {
-          // inform user
+          if (!catInput[0].value) {
+            inputFeedback('catInput');
+          }
+          if (!subInput[0].value) {
+            inputFeedback(null, 'subInput');
+          }
         }
-      } else {
-        if (catSelectElement[0].value !== '' && !!subInput) {
-          addSubcategoryToCategory(catSelectElement[0].value, subInput);
-          showOrHideSubcategoryInput(catSelectElement[0].value, subInput);
+      } else { // just adding subcategory
+        if (catSelectElement[0].value !== '' && !!subInput[0].value) {
+          addSubcategoryToCategory(catSelectElement[0].value, subInput[0].value);
+          showOrHideSubcategoryInput(catSelectElement[0].value, subInput[0].value);
         } else {
-          // inform user
+          if (catSelectElement[0].value === '') {
+            inputFeedback('catSelectElement');
+          }
+          if (!subInput[0].value) {
+            inputFeedback(null, 'subInput');
+          }
         }
       }
     }
@@ -489,19 +500,15 @@ $(document).ready(function() {
   function refreshSubcategories(event, addedSubcategory) {
     let blankOption;
     let subcategorySelectElement = $('#subcategory');
-    let chosenCategory; // can I use: chosenCategory = event.target.value || event
+    let chosenCategory = event.target ? event.target.value : event; // on change vs. entering new subcategory
 
-    if (typeof event === 'object') {
-      chosenCategory = event.target.value;
-    } else {
-      chosenCategory = event;
-    }
     // empty current options to prevent duplicates
     blankOption = subcategorySelectElement.children().first().detach();
     subcategorySelectElement.empty();
     subcategorySelectElement.prepend(blankOption);
 
     if (chosenCategory === '' || chosenCategory === undefined) {
+      console.log('chosenCategory is falsy');
       return;
     }
 
@@ -514,6 +521,50 @@ $(document).ready(function() {
       `);
     });
   }
+
+  function inputFeedback(category, subcategory, date, amount) {
+    let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
+    let catInput = $('#cat-input');
+    let subInput = $('#sub-input');
+
+    if (category === 'catInput') {
+      catInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      catInput.focus();
+      setTimeout(function() {
+        catInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+    }
+    if (category === 'catSelectElement') {
+      catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      catSelectElement.focus();
+      setTimeout(function() {
+        catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+    }
+
+    if (subcategory === 'subInput') {
+      subInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      if (category === null) {
+        subInput.focus();
+      }
+      setTimeout(function() {
+        subInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+    }
+    if (subcategory === 'subSelectElement') {
+
+    }
+
+    if (date === 'date') {
+
+    }
+
+    if (amount === 'amount') {
+
+    }
+  }
+
 
 
 
