@@ -2,12 +2,12 @@
 TODO
 - add jQuery effects when adding expense
 - add c3js graph
-- ability to delete category and subcategory
 - add indication of current expense order
-- edit category and subcategory names
+- edit category and subcategory names (edit button next to plus and minus buttons)
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
-- reorder categories and subcategories alphabetically, while still selecting them after adding them
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
+- add commas to numbers over 999
+- improve CSS
 */
 
 // Local Storage Utility Functions
@@ -79,6 +79,12 @@ $(document).ready(function() {
       return;
     }
 
+    // add indication of current order to button
+    let notOrder = (order === 'oldest') ? 'newest' : 'oldest';
+    $(`#${order}`).attr('class', 'current-order');
+    $(`#${notOrder}`).removeAttr('class');
+
+    // parse expenses in localStorage
     let parsedLocalStorage = {};
     localStorageKeys.forEach(key => {
       if (key !== 'userPrefs') {
@@ -251,12 +257,14 @@ $(document).ready(function() {
     orderAndReset.after(`
     <div class="expenseItem">
       <div>
-        <p>${dateFormat}</p>
-        <div class="cat-and-subcat"><span>${category}</span> <span>${subcategory}</span></div>
-        <p>$${expense}</p>
+        <p id="date-header">${dateFormat}</p>
+        <div class="card-info">
+          <p>$${expense}</p>
+          <p><span>${category}</span><br>${subcategory}</p>
+        </div>
       </div>
 
-      <button class="delete" data-timestamp="${timestamp}" data-datekey="${dateKey}">Delete</button>
+      <button class="delete" data-timestamp="${timestamp}" data-datekey="${dateKey}" title="Delete">Delete</button>
     </div>`);
   }
 
@@ -277,13 +285,21 @@ $(document).ready(function() {
   // ORDER AND RESET
   $('#order-and-reset').on('click', 'button', function(event) {
     detachAndClearExpenses();
+    let newest = $('#newest');
+    let oldest = $('#oldest');
 
     if ($(this).attr('id') === 'newest') {
       userOrder('newest'); // set userPref
       orderLocalStorage('newest');
+      newest.attr('class', 'current-order');
+      oldest.removeAttr('class');
+
     } else if ($(this).attr('id') === 'oldest') {
       userOrder('oldest'); // set userPref
       orderLocalStorage('oldest');
+      oldest.attr('class', 'current-order');
+      newest.removeAttr('class');
+
     } else if ($(this).attr('id') === 'reset') {
       $(this).parent().attr('style', 'display:none');
       let userPrefs = getItem('userPrefs'); // local userPrefs variable
@@ -340,11 +356,11 @@ $(document).ready(function() {
     if (event.target.id === 'add-cat') {
       showOrHideBothInputs();
     } else if (event.target.id === 'minus-cat') {
-      deleteCategory('minus-cat');
+      deleteCategory();
     } else if (event.target.id === 'add-sub') {
       showOrHideSubcategoryInput();
     } else if (event.target.id === 'minus-sub') {
-      console.log('minus-sub');
+      deleteSubcategory();
     }
   });
 
@@ -519,7 +535,7 @@ $(document).ready(function() {
     refreshSubcategories(event);
   });
 
-  function refreshSubcategories(event, addedSubcategory) {
+  function refreshSubcategories(event, addedSubcategory) { // may not need second argument
     let blankOption;
     let subcategorySelectElement = $('#subcategory');
     let chosenCategory = (typeof event === 'object') ? event.target.value : event; // onchange vs. entering new subcategory
@@ -591,7 +607,7 @@ $(document).ready(function() {
 
 
   // DELETE CATEGORY/SUBCATEGORY
-  function deleteCategory(deletion) {
+  function deleteCategory() {
     let catSelectElement = $('#category');
     if (catSelectElement[0].value === '') {
       return;
@@ -611,7 +627,7 @@ $(document).ready(function() {
     });
 
     // delete selected category expenses from localStorage, update expenses in localStorage
-    let updatedLocalStorage = traverseParsedLocalStorageToDeleteCategoryExpenses(parsedLocalStorage, catSelectElement[0].value);
+    let updatedLocalStorage = deleteExpenses(parsedLocalStorage, catSelectElement[0].value, 'category');
     clearEverything();
     if (Object.keys(updatedLocalStorage).length > 0) {
       for (let key in updatedLocalStorage) {
@@ -624,26 +640,30 @@ $(document).ready(function() {
     parsedUserPrefs[1] = userCategories;
     updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
 
-
-
+    // update select elements and html
     loadCategoriesToCategorySelectOption();
     refreshSubcategories();
     detachAndClearExpenses();
     orderLocalStorage(userOrder());
   }
 
-  function traverseParsedLocalStorageToDeleteCategoryExpenses(item, category) {
-
+  function deleteExpenses(item, catOption, keyOfInterest, subOption) {
     let newLocalStorage = {};
 
     for (let key in item) {
       if (Array.isArray(item[key])) {
-        newLocalStorage[key] = item[key].filter(expense => expense['category'] !== category);
+        newLocalStorage[key] = item[key].filter(expense => {
+          if (arguments[arguments.length - 1] === undefined) {
+            return expense[keyOfInterest] !== catOption;
+          } else {
+            return !(expense[keyOfInterest] === subOption && expense['category'] === catOption);
+          }
+        });
         if (newLocalStorage[key].length === 0) {
           delete newLocalStorage[key];
         }
       } else {
-        newLocalStorage[key] = traverseParsedLocalStorageToDeleteCategoryExpenses(item[key], category);
+        newLocalStorage[key] = deleteExpenses(item[key], catOption, keyOfInterest, subOption);
         if (Object.keys(newLocalStorage[key]).length === 0) {
           delete newLocalStorage[key];
         }
@@ -653,15 +673,60 @@ $(document).ready(function() {
     return newLocalStorage;
   }
 
+  function deleteSubcategory() {
+    let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
+    if (subSelectElement[0].value === '') {
+      return;
+    }
+
+    let localStorageKeys = Object.keys(window.localStorage);
+    let userCategories = {};
+    let parsedUserPrefs;
+    let parsedLocalStorage = {};
+    localStorageKeys.forEach(key => {
+      if (key === 'userPrefs') {
+        parsedUserPrefs = JSON.parse(getItem(key)); // array
+        userCategories = parsedUserPrefs[1]; // object
+      } else {
+        parsedLocalStorage[key] = JSON.parse(getItem(key));
+      }
+    });
+
+    // delete selected subcategory expenses from localStorage, update expenses in localStorage
+    let updatedLocalStorage = deleteExpenses(parsedLocalStorage, catSelectElement[0].value,  'subcategory', subSelectElement[0].value);
+    clearEverything();
+    if (Object.keys(updatedLocalStorage).length > 0) {
+      for (let key in updatedLocalStorage) {
+        createItem(key, JSON.stringify(updatedLocalStorage[key]));
+      }
+    }
+
+    // delete selected subcategory from userPrefs, update userPrefs in localStorage
+    let indexOfSubcategory = userCategories[catSelectElement[0].value].indexOf(subSelectElement[0].value);
+    userCategories[catSelectElement[0].value].splice(indexOfSubcategory, 1);
+    parsedUserPrefs[1] = userCategories;
+    updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+
+    // update select elements and html
+    refreshSubcategories(catSelectElement[0].value);
+    detachAndClearExpenses();
+    orderLocalStorage(userOrder());
 
 
-  // when category is deleted loadCategoriesToCategorySelectOption()
-  // when subcategory is deleted refreshSubcategories()
 
-  // UPDATE SUBCATEGORIES
+  }
 
 
 
 
-  // when deleting categories/subcategories, must delete related expenses too
+  // EDIT SUBCATEGORIES
+
+
+
+
+
+
+
+
 });

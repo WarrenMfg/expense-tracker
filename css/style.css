@@ -15,12 +15,13 @@
 }
 
 h1 {
+  position: sticky;
+  top: 110px;
   text-align: center;
-  margin: 0;
-  background-color: var(--blue);
-  color: white;
-  letter-spacing: 2px;
-  font-weight: 300;
+  color: black;
+  letter-spacing: 5px;
+  font-weight: 400;
+  font-size: 40px;
 }
 
 form {
@@ -29,7 +30,7 @@ form {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 0.5fr;
   grid-template-areas: "category subcategory date amount add";
-  padding: 20px;
+  padding: 15px 20px 20px;
   background-color: var(--blue);
   color: white;
 }
@@ -51,23 +52,18 @@ form p {
   display: none;
 }
 
-select, #cat-input, #sub-input {
+select, input {
+  display: inline-block;
   width: 75%;
-  height: 24px;
+  height: 32px;
   border: 2px solid rgb(220, 220, 220);
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 14px;
 }
 
 i {
   cursor: pointer;
-}
-
-input {
-  display: inline-block;
-  width: 75%;
-  height: 24px;
-  border: 2px solid rgb(220, 220, 220);
-  padding-left: 5px;
-  border-radius: 5px;
 }
 
 #category-div {
@@ -98,8 +94,9 @@ input {
   border-radius: 5px;
   border: 1px solid black;
   color: black;
+  font-size: 12px;
   background-color: white;
-  height: 75%;
+  height: 55px;
   transition: all 0.2s ease;
 }
 
@@ -107,7 +104,7 @@ input {
   background-color: var(--yellow);
   border-radius: 50px;
   border: .5px solid black;
-  transform: scale(1.25);
+  box-shadow: 0 0 5px black;
   cursor: pointer;
 }
 
@@ -115,6 +112,8 @@ input {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-areas: "graph expenses";
+  margin-top: 10px;
+  padding-top: 10px;
 }
 
 #graph {
@@ -123,7 +122,6 @@ input {
 
 #expenses {
   grid-area: expenses;
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -137,19 +135,23 @@ input {
 
 #newest, #oldest, #reset, .delete {
   display: inline-block;
-  margin: 10px;
   border-radius: 5px;
   border: 1px solid black;
   color: black;
   background-color: white;
+  font-size: 12px;
   height: 30px;
   width: 70px;
   transition: all 0.2s ease;
 }
 
+#oldest {
+  margin: 0 10px 10px;
+}
+
 #newest:hover, #oldest:hover, #reset:hover, .delete:hover {
   color: white;
-  transform: scale(1.25);
+  box-shadow: 0 0 5px black;
   border-radius: 25px;
   border: .5 solid black;
   cursor: pointer;
@@ -164,9 +166,16 @@ input {
   background-color: var(--orange);
 }
 
+#order-and-reset .current-order {
+  color: white;
+  background-color: var(--blue);
+  border-radius: 25px;
+  border: .5 solid black;
+  cursor: pointer;
+}
+
 .expenseItem {
   margin: 10px;
-  padding: 20px 0;
   width: 70%;
   border-radius: 5px;
   box-shadow: 0 0 5px black;
@@ -177,39 +186,43 @@ input {
   box-shadow: 0 0 15px black;
 }
 
-.expenseItem p {
-  text-align: center;
-  margin-bottom: 5px;
-}
-
-.expenseItem p:first-child {
+#date-header {
   padding: 15px 0;
   margin: 0;
+  text-align: center;
+  background-color: var(--blue);
+  color: white;
 }
 
-.cat-and-subcat {
+.card-info {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-areas: "item-cat item-subcat";
+  grid-template-areas: "expense info";
+  align-items: center;
+  padding: 15px;
 }
 
-.cat-and-subcat span:first-child {
-  display: block;
-  text-align: center;
-  margin-left: 30px;
-  grid-area: item-cat;
+.card-info p:first-child {
+  grid-area: expense;
+  font-size: 32px;
+  text-align: right;
+  padding: 15px;
+  font-weight: 400;
 }
 
-.cat-and-subcat span:last-child {
-  display: block;
-  text-align: center;
-  margin-right: 30px;
-  grid-area: item-subcat;
+.card-info p span {
+  font-weight: bold;
+}
+
+.card-info p:last-child {
+  grid-area: info;
+  padding-left: 15px;
+  line-height: 20px;
 }
 
 .delete {
   display: block;
-  margin: 18px auto 0;
+  margin: 0 auto 30px;
 }
 
 .delete:hover {
