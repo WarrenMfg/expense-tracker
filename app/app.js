@@ -75,6 +75,7 @@ $(document).ready(function() {
     let localStorageKeys = Object.keys(window.localStorage);
 
     if (localStorageKeys.length === 1) { // if only key is userPrefs
+      $('#reset').trigger('click');
       return;
     }
 
@@ -521,7 +522,7 @@ $(document).ready(function() {
   function refreshSubcategories(event, addedSubcategory) {
     let blankOption;
     let subcategorySelectElement = $('#subcategory');
-    let chosenCategory = event.target ? event.target.value : event; // on change vs. entering new subcategory
+    let chosenCategory = (typeof event === 'object') ? event.target.value : event; // onchange vs. entering new subcategory
 
     // empty current options to prevent duplicates
     blankOption = subcategorySelectElement.children().first().detach();
@@ -590,17 +591,72 @@ $(document).ready(function() {
 
 
   // DELETE CATEGORY/SUBCATEGORY
-  function deleteCategory(flyout) {
-    // make both hidden/remove both flyouts
-    // if flyout is 'minus-cat'
-      // get categories
-      // add to flyout with delete x button
-      // show 'minus-cat' flyout
+  function deleteCategory(deletion) {
+    let catSelectElement = $('#category');
+    if (catSelectElement[0].value === '') {
+      return;
+    }
+
+    let localStorageKeys = Object.keys(window.localStorage);
+    let userCategories = {};
+    let parsedUserPrefs;
+    let parsedLocalStorage = {};
+    localStorageKeys.forEach(key => {
+      if (key === 'userPrefs') {
+        parsedUserPrefs = JSON.parse(getItem(key)); // array
+        userCategories = parsedUserPrefs[1]; // object
+      } else {
+        parsedLocalStorage[key] = JSON.parse(getItem(key));
+      }
+    });
+
+    // delete selected category expenses from localStorage, update expenses in localStorage
+    let updatedLocalStorage = traverseParsedLocalStorageToDeleteCategoryExpenses(parsedLocalStorage, catSelectElement[0].value);
+    clearEverything();
+    if (Object.keys(updatedLocalStorage).length > 0) {
+      for (let key in updatedLocalStorage) {
+        createItem(key, JSON.stringify(updatedLocalStorage[key]));
+      }
+    }
+
+    // delete selected category from userPrefs, update userPrefs in localStorage
+    delete userCategories[catSelectElement[0].value];
+    parsedUserPrefs[1] = userCategories;
+    updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+
+
+
+    loadCategoriesToCategorySelectOption();
+    refreshSubcategories();
+    detachAndClearExpenses();
+    orderLocalStorage(userOrder());
+  }
+
+  function traverseParsedLocalStorageToDeleteCategoryExpenses(item, category) {
+
+    let newLocalStorage = {};
+
+    for (let key in item) {
+      if (Array.isArray(item[key])) {
+        newLocalStorage[key] = item[key].filter(expense => expense['category'] !== category);
+        if (newLocalStorage[key].length === 0) {
+          delete newLocalStorage[key];
+        }
+      } else {
+        newLocalStorage[key] = traverseParsedLocalStorageToDeleteCategoryExpenses(item[key], category);
+        if (Object.keys(newLocalStorage[key]).length === 0) {
+          delete newLocalStorage[key];
+        }
+      }
+    }
+
+    return newLocalStorage;
   }
 
 
 
   // when category is deleted loadCategoriesToCategorySelectOption()
+  // when subcategory is deleted refreshSubcategories()
 
   // UPDATE SUBCATEGORIES
 
