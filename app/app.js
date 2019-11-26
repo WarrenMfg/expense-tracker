@@ -81,6 +81,7 @@ $(document).ready(function() {
               color = myColors[index];
             }
           });
+          expenseItemHeaderColor(color, d.id);
           return color;
         } else {
           chart.data.columns.forEach(function(column, index) {
@@ -311,7 +312,7 @@ $(document).ready(function() {
     orderAndReset.after(`
     <div class="expenseItem">
       <div>
-        <p id="date-header">${dateFormat}</p>
+        <p class="date-header" data-category="${category}">${dateFormat}</p>
         <div class="card-info">
           <p>$${expense}</p>
           <p><span>${category}</span><br>${subcategory}</p>
@@ -812,7 +813,8 @@ $(document).ready(function() {
     for (let cat in categoriesObj) {
       let column = [];
       column.push(cat);
-      column = column.concat(categoriesObj[cat]);
+      let sum = parseFloat(categoriesObj[cat].reduce((acc, val) => acc + val).toFixed(2));
+      column.push(sum);
       expenseColumns.push(column);
     }
     // sort alphabetically by category name
@@ -831,6 +833,16 @@ $(document).ready(function() {
     chart.data.columns = expenseColumns;
     chart.load({unload: true, columns: expenseColumns});
   }
+
+  function expenseItemHeaderColor(color, category) {
+    let dateHeaders = $(`[data-category=${category}]`);
+
+    dateHeaders.each(function(i, header) {
+      header.setAttribute('style', `background-color:${color}`);
+    });
+  }
+
+
 
 
 });

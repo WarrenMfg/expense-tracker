@@ -108,6 +108,17 @@ i {
   padding-top: 10px;
 }
 
+h1 {
+  position: fixed;
+  top: 180px;
+  letter-spacing: 5px;
+  font-weight: bold;
+  font-size: 40px;
+  text-align: center;
+  width: 50%;
+  height: auto;
+}
+
 #graph {
   grid-area: graph;
   position: fixed;
@@ -119,16 +130,13 @@ i {
   width: 50%;
 }
 
-h1 {
-  position: fixed;
-  top: -40%;
-  width: 100%;
-  height: auto;
-  text-align: center;
-  color: black;
-  letter-spacing: 5px;
-  font-weight: bold;
-  font-size: 40px;
+.c3-chart-arc text {
+  font-size: 16px;
+  text-shadow: 0 0 9px black;
+}
+
+.c3-legend-item text {
+  font-size: 16px;
 }
 
 /* EXPENSES */
@@ -187,26 +195,22 @@ h1 {
 .expenseItem {
   margin: 10px;
   width: 70%;
+  border-radius: 10px;
   box-shadow: 0 0 5px black;
   transition: all 0.2s ease;
 }
 
 .expenseItem:hover {
-  border-radius: 10px;
   box-shadow: 0 0 15px black;
 }
 
-#date-header {
+.date-header {
   padding: 15px 0;
   margin: 0;
-  text-align: center;
-  background-color: var(--blue);
-  color: white;
-  transition: border-radius 0.2s ease;
-}
-
-.expenseItem:hover #date-header {
   border-radius: 10px 10px 0 0;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 9px black;
 }
 
 .card-info {
