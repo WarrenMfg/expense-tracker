@@ -14,16 +14,6 @@
   outline: none;
 }
 
-h1 {
-  position: sticky;
-  top: 110px;
-  text-align: center;
-  color: black;
-  letter-spacing: 5px;
-  font-weight: 400;
-  font-size: 40px;
-}
-
 form {
   position: sticky;
   top: 0;
@@ -108,6 +98,8 @@ i {
   cursor: pointer;
 }
 
+/* CHART */
+
 #expense-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -118,7 +110,28 @@ i {
 
 #graph {
   grid-area: graph;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  top: 50%;
+  transform: translate(0, -25%);
+  width: 50%;
 }
+
+h1 {
+  position: fixed;
+  top: -40%;
+  width: 100%;
+  height: auto;
+  text-align: center;
+  color: black;
+  letter-spacing: 5px;
+  font-weight: bold;
+  font-size: 40px;
+}
+
+/* EXPENSES */
 
 #expenses {
   grid-area: expenses;
@@ -174,12 +187,12 @@ i {
 .expenseItem {
   margin: 10px;
   width: 70%;
-  border-radius: 5px;
   box-shadow: 0 0 5px black;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .expenseItem:hover {
+  border-radius: 10px;
   box-shadow: 0 0 15px black;
 }
 
@@ -189,6 +202,11 @@ i {
   text-align: center;
   background-color: var(--blue);
   color: white;
+  transition: border-radius 0.2s ease;
+}
+
+.expenseItem:hover #date-header {
+  border-radius: 10px 10px 0 0;
 }
 
 .card-info {
@@ -226,6 +244,3 @@ i {
   color: white;
   background-color: var(--red);
 }
-
-
-

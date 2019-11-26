@@ -1,14 +1,16 @@
 /*
 TODO
 - add jQuery effects when adding expense
-- add c3js graph
-- add indication of current expense order
+- improve chart labels
+- add coordinating colors to expense cards
 - edit category and subcategory names (edit button next to plus and minus buttons)
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 - add commas to numbers over 999
 - improve CSS
+- add today's date and onclick open picker
 */
+
 
 // Local Storage Utility Functions
 //get item
@@ -57,6 +59,56 @@ $(document).ready(function() {
     loadCategoriesToCategorySelectOption();
   }
 
+
+
+
+  // GENERATE CHART AND CHART COLORS
+  let myColors = [
+    '#0a7b83', '#2AA876', '#FFD265', '#F19C65', '#CE4D45', // lightest
+    '#074D52', '#1A6949', '#AB8C44', '#B3744B', '#8F362F', // medium
+    '#043236', '#11422E', '#705C2D', '#6E472E', '#4F1E1A']; // darkest
+
+  let chart = c3.generate({
+    bindto: '#chart',
+    data: {
+      type: 'pie',
+      columns: [],
+      labels: true,
+      color: function(color, d) {
+        if (typeof d === 'object') {
+          chart.data.columns.forEach(function(column, index) {
+            if (column[0] === d.id) {
+              color = myColors[index];
+            }
+          });
+          return color;
+        } else {
+          chart.data.columns.forEach(function(column, index) {
+            if (column[0] === d) {
+              color = myColors[index];
+            }
+          });
+          return color;
+        }
+      }
+    },
+    pie: {
+      label: {
+        format: function(v) {
+          return '$' + v;
+        }
+      }
+    },
+    size: {
+      width: 400,
+      height: 400
+    }
+  });
+
+
+
+
+  // ORDER OF EXPENSES IN EXPENSE LIST
   function userOrder(order) {
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     if (arguments.length === 0) { // getter
@@ -100,6 +152,8 @@ $(document).ready(function() {
     $('#order-and-reset').attr('style', 'display:flex');
     // addToHTML
     orderedExpenses.forEach(expense => addToHTML(expense['timestamp'], expense['category'], expense['subcategory'], expense['dateKey'], expense['expense']));
+
+    updateChartData();
   }
   orderLocalStorage(userOrder());
 
@@ -305,6 +359,7 @@ $(document).ready(function() {
       let userPrefs = getItem('userPrefs'); // local userPrefs variable
       clearEverything();
       createItem('userPrefs', userPrefs);
+      chart.unload();
     }
   });
 
@@ -346,6 +401,8 @@ $(document).ready(function() {
 
     // remove HTML expense div
     $(this).parent().remove();
+    // update chart
+    updateChartData();
   });
 
 
@@ -720,13 +777,60 @@ $(document).ready(function() {
 
 
 
-  // EDIT SUBCATEGORIES
+  // EDIT CATEGORIES AND SUBCATEGORIES
 
 
 
 
 
+  // UPDATE CHART
+  function updateChartData() {
+    let extractedExpenses;
+    let expenseColumns = [];
+    let categoriesObj = {};
+    let localStorageKeys = Object.keys(window.localStorage);
+    let parsedLocalStorage = {};
 
+    localStorageKeys.forEach(key => {
+      if (key !== 'userPrefs') {
+        parsedLocalStorage[key] = JSON.parse(getItem(key));
+      }
+    });
+
+    // extract expense objects into an array
+    extractedExpenses = extractExpenses(parsedLocalStorage);
+    // make categoriesObj for category (keys) with array of expenses (values)
+    extractedExpenses.forEach(expenseObj => {
+      if (Object.keys(categoriesObj).includes(expenseObj.category)) {
+        categoriesObj[expenseObj.category].push(parseFloat(expenseObj.expense));
+      } else {
+        categoriesObj[expenseObj.category] = [];
+        categoriesObj[expenseObj.category].push(parseFloat(expenseObj.expense));
+      }
+    });
+    // convert categoriesObj into array of arrays for chart
+    for (let cat in categoriesObj) {
+      let column = [];
+      column.push(cat);
+      column = column.concat(categoriesObj[cat]);
+      expenseColumns.push(column);
+    }
+    // sort alphabetically by category name
+    expenseColumns = expenseColumns.sort(function(a, b) {
+      let cat1 = a[0].toUpperCase();
+      var cat2 = b[0].toUpperCase();
+      if (cat1 < cat2) {
+        return -1;
+      } else if (cat1 > cat2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    chart.data.columns = expenseColumns;
+    chart.load({unload: true, columns: expenseColumns});
+  }
 
 
 });

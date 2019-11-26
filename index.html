@@ -9,7 +9,10 @@
           integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
           crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.21/c3.css">
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.21/c3.js"></script>
 </head>
 <body>
 
@@ -31,7 +34,7 @@
 
     <div id="date-div">
       <p>Date</p>
-      <input id="date" type="date" pattern="\d{4}-\d{2}-\d{2}" required> <!--add today's date and onclick open picker-->
+      <input id="date" type="date" pattern="\d{4}-\d{2}-\d{2}" required>
     </div>
 
     <div id="amount-div">
@@ -46,6 +49,7 @@
   <div id="expense-columns">
     <div id="graph">
       <h1>Expense Tracker</h1>
+      <div id="chart-container"><div id="chart"></div></div>
     </div>
     <div id="expenses">
       <div id="order-and-reset">
