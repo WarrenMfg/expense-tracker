@@ -1,12 +1,10 @@
 /*
 TODO
 - add jQuery effects when adding expense
-- improve chart labels
-- add coordinating colors to expense cards
 - edit category and subcategory names (edit button next to plus and minus buttons)
+- edit expense card
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
-- add commas to numbers over 999
 - improve CSS
 - add today's date and onclick open picker
 */
@@ -64,9 +62,9 @@ $(document).ready(function() {
 
   // GENERATE CHART AND CHART COLORS
   let myColors = [
-    '#0a7b83', '#2AA876', '#FFD265', '#F19C65', '#CE4D45', // lightest
+    '#0a7b83', '#2AA876', '#FFD265', '#F19C65', '#CE4D45', // light
     '#074D52', '#1A6949', '#AB8C44', '#B3744B', '#8F362F', // medium
-    '#043236', '#11422E', '#705C2D', '#6E472E', '#4F1E1A']; // darkest
+    '#043236', '#11422E', '#705C2D', '#6E472E', '#4F1E1A']; // dark
 
   let chart = c3.generate({
     bindto: '#chart',
@@ -96,13 +94,23 @@ $(document).ready(function() {
     pie: {
       label: {
         format: function(v) {
-          return '$' + v;
+          return '$' + v.toLocaleString();
         }
       }
     },
     size: {
       width: 400,
       height: 400
+    },
+    tooltip: {
+      format: {
+        name: function(name, ratio, id, index) {
+          return `${name} ${(ratio * 100).toFixed(2)}%`;
+        },
+        value: function(value, ratio, d) {
+          return `$${value.toLocaleString()}`;
+        }
+      }
     }
   });
 
@@ -304,7 +312,7 @@ $(document).ready(function() {
       'Fri': 'Friday',
       'Sat': 'Saturday'
     };
-    let dateFormat = `${dayOfWeekObj[dayOfWeek]}, ${monthObj[month]} ${day}, ${year}`;
+    let dateFormat = `${dayOfWeekObj[dayOfWeek]},<br>${monthObj[month]} ${day},<br>${year}`;
     dateKey = dateKey.join('-');
 
     // prepend to list of expenses
@@ -312,10 +320,13 @@ $(document).ready(function() {
     orderAndReset.after(`
     <div class="expenseItem">
       <div>
-        <p class="date-header" data-category="${category}">${dateFormat}</p>
+        <p class="date-header" data-category="${category}">
+          <span>${category}</span>
+          <span>${subcategory}</span>
+        </p>
         <div class="card-info">
-          <p>$${expense}</p>
-          <p><span>${category}</span><br>${subcategory}</p>
+          <p class="editable-expense" contenteditable="true">$${parseFloat(expense).toLocaleString()}</p>
+          <p>${dateFormat}</p>
         </div>
       </div>
 
@@ -770,15 +781,82 @@ $(document).ready(function() {
     refreshSubcategories(catSelectElement[0].value);
     detachAndClearExpenses();
     orderLocalStorage(userOrder());
-
-
-
   }
 
 
 
 
   // EDIT CATEGORIES AND SUBCATEGORIES
+
+
+
+
+  // EDIT EXPENSE AMOUNT
+  $('#expenses').on('click', '.editable-expense', function(event) { // innerText
+    let target = $(event.target);
+    // set value to parsed value
+    event.target.innerText = removeDollarSignAndCommas(event.target.innerText);
+
+    // provide indication of edit mode
+    if (!target.hasClass('edit-mode')) {
+      target.addClass('edit-mode');
+    }
+  });
+
+  function removeDollarSignAndCommas(expense) {
+    // capture original amount
+    let amount = expense.split('');
+
+    // remove dollar sign
+    if (amount[0] === '$') {
+      amount.splice(0, 1);
+    }
+
+    // remove comma(s)
+    amount = amount.map((num, i, arr) => {
+      if (num !== ',') {
+        return num;
+      }
+    });
+
+    // parse
+    return amount.join('');
+  }
+
+  // on enter
+  $('#expenses').on('keypress', '.editable-expense', function(event) {
+    if (event.keyCode === 13) {
+      event.target.contentEditable = 'false';
+    }
+  });
+
+  // on blur (pressing enter blurs editable content)
+  $('#expenses').on('blur', '.editable-expense', function(event) {
+    event.target.contentEditable = 'false';
+    let expense = removeDollarSignAndCommas(event.target.innerText);
+    event.target.innerText = `$${parseFloat(parseFloat(expense).toFixed(2)).toLocaleString()}`;
+    $(event.target).removeClass('edit-mode');
+    event.target.contentEditable = 'true';
+    updateEdit(event, event.target.innerText);
+  });
+
+  function updateEdit(expenseEvent, expenseString) {
+    console.log(expenseEvent);
+    // grab expense content
+    let timestamp = expenseEvent.originalEvent.path[3].children[1].attributes['data-timestamp'].value;
+    let category = expenseEvent.originalEvent.path[2].children[0].children[0].innerText;
+    let subcategory = expenseEvent.originalEvent.path[2].children[0].children[1].innerText;
+    let dateKey = expenseEvent.originalEvent.path[3].children[1].attributes['data-datekey'].value;
+    let expense = removeDollarSignAndCommas(expenseString);
+    let deleteButton = expenseEvent.originalEvent.path[3].children[1];
+
+    console.log(timestamp, category, subcategory, dateKey, expense);
+
+    // delete???
+    deleteButton.click();
+    // createDataStructure
+    createDataStructure(timestamp, category, subcategory, dateKey, parseFloat(expense).toFixed(2));
+  }
 
 
 
