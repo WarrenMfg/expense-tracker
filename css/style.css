@@ -93,7 +93,6 @@ i {
 #addExpense:hover {
   background-color: var(--yellow);
   border-radius: 50px;
-  border: .5px solid black;
   box-shadow: 0 0 5px black;
   cursor: pointer;
 }
@@ -172,7 +171,6 @@ h1 {
 #newest:hover, #oldest:hover, #reset:hover, .delete:hover {
   box-shadow: 0 0 5px black;
   border-radius: 25px;
-  border: .5 solid black;
   cursor: pointer;
 }
 
@@ -188,7 +186,6 @@ h1 {
 #order-and-reset .current-order {
   background-color: var(--yellow);
   border-radius: 25px;
-  border: .5 solid black;
   cursor: pointer;
 }
 
@@ -221,7 +218,6 @@ h1 {
   padding-left: 30px;
   grid-area: cat;
   font-weight: 900;
-  letter-spacing: 2px;
 }
 
 .date-header span:first-child:hover {
@@ -245,7 +241,7 @@ h1 {
   padding: 10px 0;
 }
 
-.edit-cat-and-sub {
+.cat-sub-select {
   width: 85%;
   height: 28px;
   margin: 0 auto;
@@ -266,10 +262,10 @@ h1 {
   padding: 15px;
   font-weight: 400;
   border-radius: 5px;
-  cursor: pointer;
 }
 
 .card-info p:first-child:hover {
+  cursor: pointer;
   font-style: italic;
 }
 
@@ -277,7 +273,7 @@ h1 {
   font-style: normal;
 }
 
-.expenseItem .card-info .edit-mode {
+.expenseItem .card-info p.edit-mode {
   background-color: rgb(204, 204, 204);
   cursor: text;
 }
@@ -285,7 +281,6 @@ h1 {
 .card-info p:last-child {
   grid-area: date;
   padding-left: 15px;
-  /* line-height: 20px; */
 }
 
 .delete {
@@ -296,4 +291,23 @@ h1 {
 .delete:hover {
   color: white;
   background-color: var(--red);
+}
+
+.update {
+  display: block;
+  margin: 0 auto 30px;
+  border-radius: 5px;
+  border: 1px solid black;
+  font-size: 12px;
+  height: 30px;
+  width: 70px;
+  transition: all 0.2s ease;
+  background-color: var(--green);
+  color: white;
+}
+
+.update:hover {
+  box-shadow: 0 0 5px black;
+  border-radius: 25px;
+  cursor: pointer;
 }

@@ -788,35 +788,143 @@ $(document).ready(function() {
 
   // EDIT CATEGORIES AND SUBCATEGORIES
   $('#expenses').on('click', '.date-header span', function(event) {
+    // info for editCatAndSub
     let target = $(event.target);
     let allSpans = $('.date-header').children();
     let spans = target.parent().children();
     let parsedCatsAndSubs = JSON.parse(getItem('userPrefs'))[1];
-    let categories = Object.keys(parsedCatsAndSubs);
+    let categories = Object.keys(parsedCatsAndSubs).sort();
 
-    editCatsAndSubs(spans[0].innerText, spans[1].innerText, spans, parsedCatsAndSubs, categories);
+    // remove .editable-expense class so .edit-mode won't be added to it
+    let editableExpense = target.parentsUntil('#expenses').find('.editable-expense');
+    editableExpense.removeClass('editable-expense');
+    // change contentEditable to false and add inline style to negate hover state;
+    editableExpense[0].contentEditable = false;
+    editableExpense.attr('style', 'cursor:text; font-style:normal;');
+
+    // grab delete button and change to 'update' button
+    let button = target.parentsUntil('#expenses').find('button');
+    button.removeClass('delete');
+    button.addClass('update');
+    button[0].innerText = 'Update';
+    button[0].title = 'Update';
+
+    editCatAndSub(spans[0].innerText, spans[1].innerText, spans, parsedCatsAndSubs, categories);
 
   });
 
   // turn spans to select elements
-  function editCatsAndSubs(category, subcategory, spans, catsAndSubsObj, catsArray) {
+  function editCatAndSub(category, subcategory, spans, catsAndSubsObj, catsArray) {
     let headerParagraph = spans.parent()[0];
     let currentCatAndSub = spans.detach();
-    let catSelectElement = $('<select class="edit-cat-and-sub" style="grid-area: cat"></select>');
-    let subSelectElement = $('<select class="edit-cat-and-sub" style="grid-area: sub"></select>');
-    $(catsArray).each((i, category) => {
-      catSelectElement.append(`<option value="${category}">${category}</option>`);
+    let subcategories = catsAndSubsObj[category].sort();
+    let catSelectElement = $('<select class="cat-sub-select" id="cardCat" style="grid-area:cat"></select>');
+    let subSelectElement = $('<select class="cat-sub-select" id="cardSub" style="grid-area:sub"></select>');
+
+    // append categories to select element
+    let catIndex;
+    let subIndex;
+    $(catsArray).each((i, cat) => {
+      catSelectElement.append(`<option value="${cat}">${cat}</option>`);
+      if (cat === category) {
+        catIndex = i;
+      }
     });
 
+    // append subcategories to select element
+    $(subcategories).each((i, sub) => {
+      subSelectElement.append(`<option value="${sub}">${sub}</option>`);
+      if (sub === subcategory) {
+        subIndex = i;
+      }
+    });
+
+    // append to header
     $(headerParagraph).addClass('header-edit');
-    $(headerParagraph).append(catSelectElement);
+    $(headerParagraph).append(catSelectElement, subSelectElement);
 
-    // select current expenseCard option
-    // add subcategory select/options
-    // after selection is made update localStorage
-    // update chart
-
+    // select current category and subcategory
+    catSelectElement[0].selectedIndex = catIndex;
+    subSelectElement[0].selectedIndex = subIndex;
   }
+
+  // update subcategories on category change
+  $('#expenses').on('change', '#cardCat', function(event) {
+    refreshCardSubcategories(event);
+  });
+
+  function refreshCardSubcategories(event) {
+    let parsedCatsAndSubs = JSON.parse(getItem('userPrefs'))[1];
+    let subSelectElement = $('#cardSub');
+    let selection = event.target.value;
+    let subcategories = parsedCatsAndSubs[selection].sort();
+
+    subSelectElement.empty();
+    $(subcategories).each((i, subcategory) => {
+      subSelectElement.append(`
+        <option value="${subcategory}">${subcategory}</option>
+      `);
+    });
+  }
+
+  // after selection is made update localStorage
+  $('#expenses').on('click', '.update', function(event) {
+    let target = $(event.target);
+    // get cat and sub values
+    let updatedCatAndSub = $('.cat-sub-select');
+    let updatedCat = updatedCatAndSub[0].value;
+    let updatedSub = updatedCatAndSub[1].value;
+
+    // remove select elements, add new cat/sub spans, remove .header-edit (for padding)
+    updatedCatAndSub.remove();
+    let dateHeader = target.parentsUntil('#expenses').find('.date-header');
+    dateHeader.attr('data-category', updatedCat);
+    dateHeader.append(`<span>${updatedCat}</span><span>${updatedSub}</span`);
+    dateHeader.removeClass('header-edit');
+
+    // remove .update from button, add .delete, change innerText
+    target.removeClass('update');
+    target.addClass('delete');
+    target[0].innerText = 'Delete';
+
+    // add .editable-expense back to expense, make contenteditable = true, and remove inline styles
+    let editableExpense = target.parentsUntil('#expenses').find('.card-info p:first-child');
+    editableExpense.addClass('editable-expense');
+    editableExpense[0].contentEditable = true;
+    editableExpense.removeAttr('style');
+
+    // update localStorage
+    cardCatAndSub_UpdateLocalStorage(updatedCat, updatedSub, target);
+
+  });
+
+  function cardCatAndSub_UpdateLocalStorage(category, subcategory, button) {
+    let dateKeyArray = button[0].dataset['datekey'].split('-');
+    let timestamp = parseInt(button[0].dataset['timestamp']);
+    let year = JSON.parse(getItem(dateKeyArray[0]));
+    let month = year[dateKeyArray[1]];
+    let dayOfExpenses = month[dateKeyArray[2]];
+
+    // update expense
+    dayOfExpenses = dayOfExpenses.reduce(function(acc, cur, i, arr) {
+      if (cur['timestamp'] === timestamp) {
+        cur['category'] = category;
+        cur['subcategory'] = subcategory;
+        acc.push(cur);
+      } else {
+        acc.push(cur);
+      }
+      return acc;
+    }, []);
+
+    // update localStorage
+    year[dateKeyArray[1]][dateKeyArray[2]] = dayOfExpenses;
+    updateItem(dateKeyArray[0], JSON.stringify(year));
+
+    // update chart
+    updateChartData();
+  }
+
 
 
 
