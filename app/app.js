@@ -94,7 +94,7 @@ $(document).ready(function() {
     pie: {
       label: {
         format: function(v) {
-          return '$' + v.toLocaleString();
+          return v.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
       }
     },
@@ -325,7 +325,7 @@ $(document).ready(function() {
           <span>${subcategory}</span>
         </p>
         <div class="card-info">
-          <p class="editable-expense" contenteditable="true">$${parseFloat(expense).toLocaleString()}</p>
+          <p class="editable-expense" contenteditable="true">${parseFloat(expense).toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
           <p>${dateFormat}</p>
         </div>
       </div>
@@ -834,30 +834,45 @@ $(document).ready(function() {
   $('#expenses').on('blur', '.editable-expense', function(event) {
     event.target.contentEditable = 'false';
     let expense = removeDollarSignAndCommas(event.target.innerText);
-    event.target.innerText = `$${parseFloat(parseFloat(expense).toFixed(2)).toLocaleString()}`;
+    event.target.innerText = parseFloat(expense).toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2});
     $(event.target).removeClass('edit-mode');
     event.target.contentEditable = 'true';
-    updateEdit(event, event.target.innerText);
+    let expenseCard = $(this).parentsUntil('#expenses');
+
+
+    updateEdit(expenseCard, expense);
   });
 
   function updateEdit(expenseEvent, expenseString) {
-    console.log(expenseEvent);
     // grab expense content
-    let timestamp = expenseEvent.originalEvent.path[3].children[1].attributes['data-timestamp'].value;
-    let category = expenseEvent.originalEvent.path[2].children[0].children[0].innerText;
-    let subcategory = expenseEvent.originalEvent.path[2].children[0].children[1].innerText;
-    let dateKey = expenseEvent.originalEvent.path[3].children[1].attributes['data-datekey'].value;
-    let expense = removeDollarSignAndCommas(expenseString);
-    let deleteButton = expenseEvent.originalEvent.path[3].children[1];
+    let timestamp = parseInt(expenseEvent.find('button').attr('data-timestamp'));
+    let category = expenseEvent.find('.date-header').attr('data-category');
+    let subcategory = expenseEvent.find('.date-header span')[1].innerText;
+    let dateKey = expenseEvent.find('button').attr('data-datekey');
+    let dateKeyArray = dateKey.split('-');
 
-    console.log(timestamp, category, subcategory, dateKey, expense);
+    // edit the expense
+    let parsedLocalStorage = JSON.parse(getItem(dateKeyArray[0]));
+    let dayOfExpense = parsedLocalStorage[dateKeyArray[1]][dateKeyArray[2]];
+    let expenseObj;
+    dayOfExpense = dayOfExpense.reduce(function(acc, cur, i, arr) {
+      if (cur['timestamp'] === timestamp) {
+        expenseObj = cur;
+        cur['expense'] = expenseString;
+        acc.push(cur);
+      } else {
+        acc.push(cur);
+      }
+      return acc;
+    }, []);
 
-    // delete???
-    deleteButton.click();
-    // createDataStructure
-    createDataStructure(timestamp, category, subcategory, dateKey, parseFloat(expense).toFixed(2));
+    // update localStorage
+    parsedLocalStorage[dateKeyArray[1]][dateKeyArray[2]] = dayOfExpense;
+    updateItem(dateKeyArray[0], JSON.stringify(parsedLocalStorage));
+
+    // update chart
+    updateChartData();
   }
-
 
 
 
