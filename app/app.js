@@ -2,7 +2,6 @@
 TODO
 - add jQuery effects when adding expense
 - edit category and subcategory names (edit button next to plus and minus buttons)
-- edit expense card
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 - improve CSS
