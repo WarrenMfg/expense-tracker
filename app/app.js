@@ -1,11 +1,12 @@
 /*
 TODO
-- add jQuery effects when adding expense
 - edit category and subcategory names (edit button next to plus and minus buttons)
+- add today's date and onclick open picker
+- space in cat/sub
+- add jQuery effects when adding expense
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 - improve CSS
-- add today's date and onclick open picker
 */
 
 
@@ -786,7 +787,36 @@ $(document).ready(function() {
 
 
   // EDIT CATEGORIES AND SUBCATEGORIES
+  $('#expenses').on('click', '.date-header span', function(event) {
+    let target = $(event.target);
+    let allSpans = $('.date-header').children();
+    let spans = target.parent().children();
+    let parsedCatsAndSubs = JSON.parse(getItem('userPrefs'))[1];
+    let categories = Object.keys(parsedCatsAndSubs);
 
+    editCatsAndSubs(spans[0].innerText, spans[1].innerText, spans, parsedCatsAndSubs, categories);
+
+  });
+
+  // turn spans to select elements
+  function editCatsAndSubs(category, subcategory, spans, catsAndSubsObj, catsArray) {
+    let headerParagraph = spans.parent()[0];
+    let currentCatAndSub = spans.detach();
+    let catSelectElement = $('<select class="edit-cat-and-sub" style="grid-area: cat"></select>');
+    let subSelectElement = $('<select class="edit-cat-and-sub" style="grid-area: sub"></select>');
+    $(catsArray).each((i, category) => {
+      catSelectElement.append(`<option value="${category}">${category}</option>`);
+    });
+
+    $(headerParagraph).addClass('header-edit');
+    $(headerParagraph).append(catSelectElement);
+
+    // select current expenseCard option
+    // add subcategory select/options
+    // after selection is made update localStorage
+    // update chart
+
+  }
 
 
 
@@ -794,10 +824,10 @@ $(document).ready(function() {
   $('#expenses').on('click', '.editable-expense', function(event) { // innerText
     let target = $(event.target);
     // set value to parsed value
-    event.target.innerText = removeDollarSignAndCommas(event.target.innerText);
 
     // provide indication of edit mode
     if (!target.hasClass('edit-mode')) {
+      event.target.innerText = removeDollarSignAndCommas(event.target.innerText);
       target.addClass('edit-mode');
     }
   });
@@ -837,7 +867,6 @@ $(document).ready(function() {
     $(event.target).removeClass('edit-mode');
     event.target.contentEditable = 'true';
     let expenseCard = $(this).parentsUntil('#expenses');
-
 
     updateEdit(expenseCard, expense);
   });
