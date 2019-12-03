@@ -1053,50 +1053,121 @@ $(document).ready(function() {
     let button = target.parentsUntil('#expenses').find('button');
     let dateKey = button[0].dataset['datekey'].split('-');
 
-
     // remove paragraph element and append datepicker
     target.remove();
     cardInfo.append(`
       <div><input class="edit-date" type="date" pattern="\d{4}-\d{2}-\d{2}"></div>
     `);
-
-    // fill with current date
-    // let datePicker = cardInfo.find('.edit-date');
-    // datePicker[0].value = `${dateKey[0]}-${dateKey[1]}-${dateKey[2]}`;
   });
 
   // update date on date change
   $('#expenses').on('change', '.edit-date', function(event) {
     let target = $(event.target);
     let newDate = target[0].value.split('-');
-    let cardInfo = target.parent();
+    let cardInfo = target.parent().parent();
     let button = target.parentsUntil('#expenses').find('button');
     let dateKey = button[0].dataset['datekey'].split('-');
     let timestamp = parseInt(button[0].dataset['timestamp'], 10);
-    let parsedLocalStorage = JSON.parse(getItem(window.localStorage)); // cannot do this
-    delete parsedLocalStorage['userPrefs'];
+    let userOrder;
 
-    let expensesArray = extractExpenses(parsedLocalStorage);
-    let expenseToBeEdited;
-
-    // extract expense to be edited
-    $(expensesArray).each((i, expense) => {
-      if (expense['timestamp'] === timestamp) {
-        expenseToBeEdited = expense;
+    // get localStorage
+    let localStorageKeys = Object.keys(window.localStorage);
+    let parsedLocalStorage = {};
+    localStorageKeys.forEach(key => {
+      if (key !== 'userPrefs') {
+        parsedLocalStorage[key] = JSON.parse(getItem(key));
+      } else {
+        userOrder = JSON.parse(getItem(key))[0];
       }
     });
 
-    // remove date picker
-    target.remove();
+    // extract expense to be edited and edit new expense
+    let expensesArray = extractExpenses(parsedLocalStorage);
+    let updatedExpense;
+    $(expensesArray).each((i, expense) => {
+      if (expense['timestamp'] === timestamp) {
+        updatedExpense = expense;
+        updatedExpense['dateKey'] = newDate;
+      }
+    });
 
     // update localStorage
-    expenseToBeEdited['dateKey'] = newDate;
+    let yearObj = {};
+    let monthObj = {};
+    let daysExpenses = [];
+    if (localStorageKeys.includes(newDate[0])) { // if year exists
+      if (parsedLocalStorage[newDate[0]][newDate[1]]) { // if month exists
+        if (parsedLocalStorage[newDate[0]][newDate[1]][newDate[2]]) { // if day exists
+          if (newDate.join('-') !== dateKey.join('-')) { // and the old date and new date are different
+            parsedLocalStorage[newDate[0]][newDate[1]][newDate[2]].push(updatedExpense);
+            parsedLocalStorage = deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage);
+            updateItem(newDate[0], JSON.stringify(parsedLocalStorage[newDate[0]]));
+          }
+        } else { // if day does not exist
+          daysExpenses.push(updatedExpense);
+          parsedLocalStorage[newDate[0]][newDate[1]][newDate[2]] = daysExpenses;
+          parsedLocalStorage = deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage);
+          updateItem(newDate[0], JSON.stringify(parsedLocalStorage[newDate[0]]));
+        }
+      } else { // if month does not exist
+        daysExpenses.push(updatedExpense);
+        monthObj[newDate[2]] = daysExpenses;
+        parsedLocalStorage[newDate[0]][newDate[1]] = monthObj;
+        parsedLocalStorage = deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage);
+        updateItem(newDate[0], JSON.stringify(parsedLocalStorage[newDate[0]]));
+      }
+    } else { // if year does not exist
+      daysExpenses.push(updatedExpense);
+      monthObj[newDate[2]] = daysExpenses;
+      yearObj[newDate[1]] = monthObj;
+      parsedLocalStorage[newDate[0]] = yearObj;
+      parsedLocalStorage = deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage);
+      let newLocalStorageKeys = Object.keys(parsedLocalStorage);
+      newLocalStorageKeys.forEach(key => updateItem(key, JSON.stringify(parsedLocalStorage[key])));
+    }
 
+    // remove date picker and append new date
+    target.parent().remove();
+    cardInfo.append(`<p>${formatDateForCard(newDate)}</p>`);
 
+    // update button data-datekey
+    button[0].dataset['datekey'] = newDate.join('-');
 
-
-    console.log(parsedLocalStorge, expenseToBeEdited, newDate);
+    // reorder expenses to align with userPrefs
+    $(`#${userOrder}`).trigger('click');
   });
+
+  function deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage) {
+    let expenseArray = parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]];
+
+    // delete expense with previous date
+    expenseArray = expenseArray.reduce(function(acc, cur, i, arr) {
+      if ( !((cur['timestamp'] === timestamp) && (cur['dateKey'].join('-') === dateKey.join('-'))) ) {
+        acc.push(cur);
+      }
+      return acc;
+    }, []);
+
+    // return updated expenseArray to parsedLocalStorage
+    parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]] = expenseArray;
+
+    // if expenseArray is empty
+    if (expenseArray.length === 0) {
+      delete parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]];
+    }
+
+    // if month obj is empty
+    if (Object.keys(parsedLocalStorage[dateKey[0]][dateKey[1]]).length === 0) {
+      delete parsedLocalStorage[dateKey[0]][dateKey[1]];
+    }
+
+    // if year obj is empty
+    if (Object.keys(parsedLocalStorage[dateKey[0]]).length === 0) {
+      delete parsedLocalStorage[dateKey[0]]
+      deleteItem(dateKey[0]);
+    }
+    return parsedLocalStorage;
+  }
 
 
 
