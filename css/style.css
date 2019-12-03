@@ -66,6 +66,20 @@ i {
 
 #date-div {
   grid-area: date;
+  position: relative;
+}
+
+#date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
+  color: transparent;
+  height: auto;
+  width: auto;
+  outline: none;
 }
 
 #amount-div {

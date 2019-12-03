@@ -1,12 +1,13 @@
 /*
 TODO
-- edit category and subcategory names (edit button next to plus and minus buttons)
-- add today's date and onclick open picker
+- change date on expense card
 - space in cat/sub
+- edit category and subcategory names (edit button next to plus and minus buttons)
 - add jQuery effects when adding expense
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 - improve CSS
+- make tooltip only on one line
 */
 
 
@@ -60,6 +61,31 @@ $(document).ready(function() {
 
 
 
+  // ADD TODAY'S DATE IN DATE PICKER
+  function addTodaysDate() {
+    let datePicker = $('#date');
+    let todaysDate = new Date();
+    let month = todaysDate.getMonth().toString();
+    let day = todaysDate.getDate().toString();
+    let year = todaysDate.getFullYear().toString();
+
+    if (day.length === 1) {
+      day = '0' + day;
+    }
+
+    datePicker[0].value = `${year}-${month}-${day}`;
+  }
+  addTodaysDate();
+
+  // expand date picker on click
+  $('#date').click(function(event) {
+    console.log(event);
+    // $(event).trigger('click');
+  });
+
+
+
+
   // GENERATE CHART AND CHART COLORS
   let myColors = [
     '#0a7b83', '#2AA876', '#FFD265', '#F19C65', '#CE4D45', // light
@@ -108,7 +134,7 @@ $(document).ready(function() {
           return `${name} ${(ratio * 100).toFixed(2)}%`;
         },
         value: function(value, ratio, d) {
-          return `$${value.toLocaleString()}`;
+          return `${value.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         }
       }
     }
