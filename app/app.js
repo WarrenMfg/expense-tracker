@@ -1,6 +1,7 @@
 /*
 TODO
 - change date on expense card
+- add total expense below chart
 - space in cat/sub
 - add jQuery effects when adding expense
 - make tooltip only on one line
@@ -304,38 +305,8 @@ $(document).ready(function() {
 
   // DISPLAY EXPENSES
   function addToHTML(timestamp, category, subcategory, dateKey, expense) {
-    // format date
-    let year = dateKey[0]; // at this point dateKey is an array, not a string
-    let month = dateKey[1];
-    let monthObj = {
-      '01': 'January',
-      '02': 'February',
-      '03': 'March',
-      '04': 'April',
-      '05': 'May',
-      '06': 'June',
-      '07': 'July',
-      '08': 'August',
-      '09': 'September',
-      '10': 'October',
-      '11': 'November',
-      '12': 'December'
-    };
-    let day = parseInt(dateKey[2], 10).toString();
-    let newDate = new Date(`${monthObj[month]} ${day} ${year}`);
-    newDate = newDate.toDateString()
-    newDate = newDate.split(' ');
-    let dayOfWeek = newDate[0];
-    let dayOfWeekObj = {
-      'Sun': 'Sunday',
-      'Mon': 'Monday',
-      'Tue': 'Tuesday',
-      'Wed': 'Wednesday',
-      'Thu': 'Thursday',
-      'Fri': 'Friday',
-      'Sat': 'Saturday'
-    };
-    let dateFormat = `${dayOfWeekObj[dayOfWeek]},<br>${monthObj[month]} ${day},<br>${year}`;
+
+    let dateFormat = formatDateForCard(dateKey);
     dateKey = dateKey.join('-');
 
     // prepend to list of expenses
@@ -357,6 +328,45 @@ $(document).ready(function() {
     </div>`);
   }
 
+
+
+
+  // FORMAT DATE
+  function formatDateForCard(date) {
+    // format date
+    let year = date[0];
+    let month = date[1];
+    let monthObj = {
+      '01': 'January',
+      '02': 'February',
+      '03': 'March',
+      '04': 'April',
+      '05': 'May',
+      '06': 'June',
+      '07': 'July',
+      '08': 'August',
+      '09': 'September',
+      '10': 'October',
+      '11': 'November',
+      '12': 'December'
+    };
+    let day = parseInt(date[2], 10).toString();
+    let newDate = new Date(`${monthObj[month]} ${day} ${year}`);
+    newDate = newDate.toDateString()
+    newDate = newDate.split(' ');
+    let dayOfWeek = newDate[0];
+    let dayOfWeekObj = {
+      'Sun': 'Sunday',
+      'Mon': 'Monday',
+      'Tue': 'Tuesday',
+      'Wed': 'Wednesday',
+      'Thu': 'Thursday',
+      'Fri': 'Friday',
+      'Sat': 'Saturday'
+    };
+
+    return `${dayOfWeekObj[dayOfWeek]},<br>${monthObj[month]} ${day},<br>${year}`;
+  }
 
 
 
@@ -923,7 +933,7 @@ $(document).ready(function() {
 
   function cardCatAndSub_UpdateLocalStorage(category, subcategory, button) {
     let dateKeyArray = button[0].dataset['datekey'].split('-');
-    let timestamp = parseInt(button[0].dataset['timestamp']);
+    let timestamp = parseInt(button[0].dataset['timestamp'], 10);
     let year = JSON.parse(getItem(dateKeyArray[0]));
     let month = year[dateKeyArray[1]];
     let dayOfExpenses = month[dateKeyArray[2]];
@@ -1004,7 +1014,7 @@ $(document).ready(function() {
 
   function updateEdit(expenseEvent, expenseString) {
     // grab expense content
-    let timestamp = parseInt(expenseEvent.find('button').attr('data-timestamp'));
+    let timestamp = parseInt(expenseEvent.find('button').attr('data-timestamp'), 10);
     let category = expenseEvent.find('.date-header').attr('data-category');
     let subcategory = expenseEvent.find('.date-header span')[1].innerText;
     let dateKey = expenseEvent.find('button').attr('data-datekey');
@@ -1032,6 +1042,61 @@ $(document).ready(function() {
     // update chart
     updateChartData();
   }
+
+
+
+
+  // EDIT DATE
+  $('#expenses').on('click', '.card-info p:last-child', function(event) { // innerHTML
+    let target = $(event.target);
+    let cardInfo = target.parent();
+    let button = target.parentsUntil('#expenses').find('button');
+    let dateKey = button[0].dataset['datekey'].split('-');
+
+
+    // remove paragraph element and append datepicker
+    target.remove();
+    cardInfo.append(`
+      <div><input class="edit-date" type="date" pattern="\d{4}-\d{2}-\d{2}"></div>
+    `);
+
+    // fill with current date
+    // let datePicker = cardInfo.find('.edit-date');
+    // datePicker[0].value = `${dateKey[0]}-${dateKey[1]}-${dateKey[2]}`;
+  });
+
+  // update date on date change
+  $('#expenses').on('change', '.edit-date', function(event) {
+    let target = $(event.target);
+    let newDate = target[0].value.split('-');
+    let cardInfo = target.parent();
+    let button = target.parentsUntil('#expenses').find('button');
+    let dateKey = button[0].dataset['datekey'].split('-');
+    let timestamp = parseInt(button[0].dataset['timestamp'], 10);
+    let parsedLocalStorage = JSON.parse(getItem(window.localStorage)); // cannot do this
+    delete parsedLocalStorage['userPrefs'];
+
+    let expensesArray = extractExpenses(parsedLocalStorage);
+    let expenseToBeEdited;
+
+    // extract expense to be edited
+    $(expensesArray).each((i, expense) => {
+      if (expense['timestamp'] === timestamp) {
+        expenseToBeEdited = expense;
+      }
+    });
+
+    // remove date picker
+    target.remove();
+
+    // update localStorage
+    expenseToBeEdited['dateKey'] = newDate;
+
+
+
+
+    console.log(parsedLocalStorge, expenseToBeEdited, newDate);
+  });
 
 
 
@@ -1093,8 +1158,4 @@ $(document).ready(function() {
       header.setAttribute('style', `background-color:${color}`);
     });
   }
-
-
-
-
 });

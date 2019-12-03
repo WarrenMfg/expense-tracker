@@ -282,7 +282,8 @@ h1 {
   grid-area: expense;
   font-size: 32px;
   text-align: right;
-  padding: 15px;
+  padding: 15px 0 15px 15px;
+  margin-right: 15px;
   font-weight: 400;
   border-radius: 5px;
 }
@@ -303,8 +304,40 @@ h1 {
 
 .card-info p:last-child {
   grid-area: date;
-  padding-left: 15px;
+  margin-left: 15px;
   overflow: hidden;
+}
+
+.card-info p:last-child:hover {
+  cursor: pointer;
+  font-style: italic;
+}
+
+.card-info div {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.edit-date {
+  width: 85%;
+  margin-left: 15px;
+}
+
+.edit-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
+  color: transparent;
+  height: auto;
+  width: auto;
+  outline: none;
 }
 
 .delete {
