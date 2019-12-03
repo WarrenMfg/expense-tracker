@@ -121,26 +121,33 @@ i {
   padding-top: 10px;
 }
 
+#graph {
+  grid-area: graph;
+  justify-self: end;
+  position: sticky;
+  top: 110px;
+  display: grid;
+  grid-template-rows: 0.5fr 2fr;
+  grid-template-areas: "h1" "graph-container";
+  height: 85vh;
+  width: 85%;
+}
+
 h1 {
-  position: fixed;
-  top: 180px;
+  grid-area: h1;
+  align-self: center;
   letter-spacing: 5px;
   font-weight: bold;
   font-size: 40px;
   text-align: center;
-  width: 50%;
-  height: auto;
 }
 
-#graph {
-  grid-area: graph;
-  position: fixed;
+#chart-container {
+  grid-area: graph-container;
   display: flex;
   flex-direction: column;
   align-items: center;
-  top: 50%;
-  transform: translate(0, -25%);
-  width: 50%;
+  justify-items: start;
 }
 
 .c3-chart-arc text {
@@ -156,6 +163,8 @@ h1 {
 
 #expenses {
   grid-area: expenses;
+  justify-self: start;
+  width: 65%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -295,6 +304,7 @@ h1 {
 .card-info p:last-child {
   grid-area: date;
   padding-left: 15px;
+  overflow: hidden;
 }
 
 .delete {
