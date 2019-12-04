@@ -1,11 +1,10 @@
 /*
 TODO
+- validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
+- edit category and subcategory names (edit button next to plus and minus buttons)
 - add jQuery effects when adding expense
-- space in cat/sub
 - make tooltip only on one line
 - improve CSS
-- edit category and subcategory names (edit button next to plus and minus buttons)
-- validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - utilitiy function: when click anywhere on HTML, remove inputs, show select elements, remove delete cats/subs
 */
 
@@ -508,10 +507,10 @@ $(document).ready(function() {
       subSelectElement.removeAttr('class'); // may not need
       // if category was entered
       if (arguments.length > 0) {
-        let catOptionIndex = catSelectElement.find(`option[value=${addedCategory}]`)[0].index;
+        let catOptionIndex = catSelectElement.find(`option[value="${addedCategory}"]`)[0].index;
         catSelectElement[0].selectedIndex = catOptionIndex;
         refreshSubcategories(addedCategory, addedSubcategory);
-        let subOptionIndex = subSelectElement.find(`option[value=${addedSubcategory}]`)[0].index;
+        let subOptionIndex = subSelectElement.find(`option[value="${addedSubcategory}"]`)[0].index;
         subSelectElement[0].selectedIndex = subOptionIndex;
       }
     } else { // remove selects, show inputs
@@ -547,7 +546,7 @@ $(document).ready(function() {
       // if new subcategory was entered, arguments will be passed in
       if (arguments.length > 0) {
         refreshSubcategories(selectedCategory, addedSubcategory);
-        let subOptionIndex = subSelectElement.find(`option[value=${addedSubcategory}]`)[0].index;
+        let subOptionIndex = subSelectElement.find(`option[value="${addedSubcategory}"]`)[0].index;
         subSelectElement[0].selectedIndex = subOptionIndex;
       }
     } else { // remove select, show input
@@ -599,15 +598,20 @@ $(document).ready(function() {
     }
   });
 
-  function addCategoryAndSubcategoryToUserPrefs(category, subcategory) {
+  function addCategoryAndSubcategoryToUserPrefs(category, subcategory) { // at a later time, add validation to prohibit same category/subcategory
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let categories = parsedUserPrefs[1];
     let argumentsArray = [category, subcategory];
 
     // title case
     argumentsArray = argumentsArray.map(string => {
-      string = string.toLowerCase();
-      string = string.charAt(0).toUpperCase() + string.slice(1);
+      let words = string.split(' ');
+      words = words.map(word => {
+        word = word.toLowerCase();
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+        return word;
+      });
+      string = words.join(' ');
       return string;
     });
 
@@ -617,15 +621,20 @@ $(document).ready(function() {
     return argumentsArray;
   }
 
-  function addSubcategoryToCategory(category, subcategory) {
+  function addSubcategoryToCategory(category, subcategory) { // at a later time, add validation to prohibit same subcategory
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let categories = parsedUserPrefs[1];
 
     // title case
-    subcategory = subcategory.toLowerCase();
-    subcategory = subcategory.charAt(0).toUpperCase() + subcategory.slice(1);
+    let words = subcategory.split(' ');
+    words = words.map(word => {
+      word = word.toLowerCase();
+      word = word.charAt(0).toUpperCase() + word.slice(1);
+      return word;
+    });
+    subcategory = words.join(' ');
 
-    categories[category].push(subcategory);
+    categories[category].push(subcategory); // add validation here at a later time
     parsedUserPrefs[1] = categories;
     updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
     return subcategory;
@@ -1243,7 +1252,7 @@ $(document).ready(function() {
   }
 
   function expenseItemHeaderColor(color, category) {
-    let dateHeaders = $(`[data-category=${category}]`);
+    let dateHeaders = $(`[data-category="${category}"]`);
 
     dateHeaders.each(function(i, header) {
       header.setAttribute('style', `background-color:${color}`);
