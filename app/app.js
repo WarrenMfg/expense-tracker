@@ -2,6 +2,7 @@
 TODO
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - edit category and subcategory names (edit button next to plus and minus buttons)
+- change font awesome titles to load on delay
 - add jQuery effects when adding expense
 - make tooltip only on one line
 - improve CSS
@@ -477,10 +478,14 @@ $(document).ready(function() {
       showOrHideBothInputs();
     } else if (event.target.id === 'minus-cat') {
       deleteCategory();
+    } else if (event.target.id === 'edit-cat') {
+      editCategorySelectElement();
     } else if (event.target.id === 'add-sub') {
       showOrHideSubcategoryInput();
     } else if (event.target.id === 'minus-sub') {
       deleteSubcategory();
+    } else if (event.target.id === 'edit-sub') {
+      editSubcategorySelectElement();
     }
   });
 
@@ -847,7 +852,87 @@ $(document).ready(function() {
 
 
 
-  // EDIT CATEGORIES AND SUBCATEGORIES
+  // EDIT CATEGORY AND SUBCATEGORY SELECT ELEMENTS
+  function editCategorySelectElement() {
+    let catSelectElement = $('#category');
+    let catParent = $('#category-div');
+    let originalCategoryValue = catSelectElement[0].value;
+    let userPrefs = JSON.parse(getItem('userPrefs'));
+
+    // ensure a category was selected
+    if (originalCategoryValue === '') {
+      catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      setTimeout(function() {
+        catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+      return;
+    }
+
+    // when edit button is clicked, if catSelectElement is hidden, then show catSelectElement
+    if (catSelectElement.hasClass('hidden')) {
+      catParent.children().last().remove();
+      catSelectElement.removeClass('hidden');
+      if (typeof userPrefs[2] === 'object') {
+        userPrefs.pop();
+        updateItem('userPrefs', JSON.stringify(userPrefs));
+      }
+      return;
+    }
+
+    // add userPrefs[2] object to store originalCategoryValue
+    userPrefs.push({});
+    userPrefs[2]['originalCategoryValue'] = originalCategoryValue;
+    updateItem('userPrefs', JSON.stringify(userPrefs));
+
+    // display input with originalCategoryValue
+    catSelectElement.attr('class', 'hidden');
+    catParent.append(
+      `<input id="cat-edit-input" type="text">`
+    );
+    $('#cat-edit-input').val(originalCategoryValue).focus();
+  }
+
+  // listen for enter key to update category
+  $('#category-div').on('keyup', '#cat-edit-input', function(event) {
+    if (event.keyCode === 13) {
+      let catEditInput = $('#cat-edit-input');
+      let newCategoryValue = event.target.value;
+
+      // ensure input is not empty
+      if (newCategoryValue === '') {
+        catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+        setTimeout(function() {
+          catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+        }, 2000);
+        return;
+      }
+
+      let userPrefs = JSON.parse(getItem('userPrefs'));
+      let oldCategoryValue = userPrefs['_temp_'];
+
+      // title case
+
+
+      // set new category
+      // Object.defineProperty(userPrefs, oldCategoryValue)
+
+
+      // delete oldCategoryValue
+
+
+
+    // console.log(event);
+    }
+  })
+
+  function editSubcategorySelectElement() {
+
+  }
+
+
+
+
+  // EDIT CATEGORIES AND SUBCATEGORIES WITHIN EXPENSE CARD
   $('#expenses').on('click', '.date-header span', function(event) {
     // info for editCatAndSub
     let target = $(event.target);
