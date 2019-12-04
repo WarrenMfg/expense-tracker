@@ -1,8 +1,7 @@
 /*
 TODO
-- add total expense below chart
-- space in cat/sub
 - add jQuery effects when adding expense
+- space in cat/sub
 - make tooltip only on one line
 - improve CSS
 - edit category and subcategory names (edit button next to plus and minus buttons)
@@ -113,6 +112,9 @@ $(document).ready(function() {
           return color;
         }
       }
+    },
+    legend: {
+      position: 'bottom'
     },
     pie: {
       label: {
@@ -382,8 +384,12 @@ $(document).ready(function() {
 
   // TOTAL EXPENSES
   function updateTotalExpenses(expensesArray) {
-    let total = expensesArray.reduce((acc, cur) => acc + cur[1], 0);
     let totalDiv = $('#total');
+    if (arguments.length === 0) {
+      totalDiv.remove();
+      return;
+    }
+    let total = expensesArray.reduce((acc, cur) => acc + cur[1], 0);
 
     totalDiv.empty();
     totalDiv.append(`
@@ -416,6 +422,7 @@ $(document).ready(function() {
       let userPrefs = getItem('userPrefs'); // local userPrefs variable
       clearEverything();
       createItem('userPrefs', userPrefs);
+      updateTotalExpenses();
       chart.unload();
     }
   });
