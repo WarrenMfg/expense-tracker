@@ -1,6 +1,5 @@
 /*
 TODO
-- change date on expense card
 - add total expense below chart
 - space in cat/sub
 - add jQuery effects when adding expense
@@ -376,6 +375,19 @@ $(document).ready(function() {
     let expenses = $('#expenses');
     expenses.empty();
     expenses.prepend(orderAndReset);
+  }
+
+
+
+
+  // TOTAL EXPENSES
+  function updateTotalExpenses(expensesArray) {
+    let total = expensesArray.reduce((acc, cur) => acc + cur[1], 0);
+    let totalDiv = $('#total');
+
+    totalDiv.empty();
+    totalDiv.append(`
+    <h2>Total: ${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
   }
 
 
@@ -1219,6 +1231,7 @@ $(document).ready(function() {
     });
 
     chart.data.columns = expenseColumns;
+    updateTotalExpenses(expenseColumns);
     chart.load({unload: true, columns: expenseColumns});
   }
 
