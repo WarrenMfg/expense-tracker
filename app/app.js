@@ -1,7 +1,11 @@
 /*
 TODO
+- total expense css
+- font awesome
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add trim() to all inputs
+- add logic for input element interference when deleting cat/sub
+- in edit cat/sub mode, I can still use select element--change this
 - change font awesome titles to load on delay
 - add jQuery effects when adding expense
 - make tooltip only on one line
