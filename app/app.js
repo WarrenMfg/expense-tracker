@@ -496,6 +496,12 @@ $(document).ready(function() {
     let catParent = $('#category-div');
     let subParent = $('#subcategory-div');
 
+    // if in category edit mode
+    if ($('#cat-edit-input').length) {
+      inputFeedback('catEditInput');
+      return;
+    }
+
     // if previously clicked subcategory plus button, then clicked category plus button
     if (catSelectElement.attr('class') === undefined && subSelectElement.attr('class') === 'hidden') {
       catSelectElement.attr('class', 'hidden');
@@ -539,6 +545,12 @@ $(document).ready(function() {
     let subSelectElement = $('#subcategory');
     let subParent = $('#subcategory-div');
 
+    // if in category edit mode
+    if ($('#cat-edit-input').length) {
+      inputFeedback('catEditInput');
+      return;
+    }
+
     if (catSelectElement.attr('class') === 'hidden' && subSelectElement.attr('class') === 'hidden') {
       $('#cat-input').remove();
       catSelectElement.removeAttr('class');
@@ -570,6 +582,11 @@ $(document).ready(function() {
     if (event.keyCode === 13) {
       let catSelectElement = $('#category');
       let subInput = $('#sub-input');
+
+      // if in category edit mode
+      if ($('#cat-edit-input').length) {
+        return;
+      }
 
       // if both inputs are visible (adding a category and subcategory)
       if (catSelectElement.attr('class') === 'hidden') {
@@ -701,6 +718,7 @@ $(document).ready(function() {
     let subSelectElement = $('#subcategory');
     let catInput = $('#cat-input');
     let subInput = $('#sub-input');
+    let catEditInput = $('#cat-edit-input');
 
     if (category === 'catInput') {
       catInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
@@ -714,6 +732,13 @@ $(document).ready(function() {
       catSelectElement.focus();
       setTimeout(function() {
         catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+    }
+    if (category === 'catEditInput') {
+      catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      catEditInput.focus();
+      setTimeout(function() {
+        catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
       }, 2000);
     }
 
@@ -853,12 +878,24 @@ $(document).ready(function() {
 
 
 
-  // EDIT CATEGORY AND SUBCATEGORY SELECT ELEMENTS
+  // EDIT CATEGORY SELECT ELEMENTS
   function editCategorySelectElement() {
     let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
     let catParent = $('#category-div');
     let originalCategoryValue = catSelectElement[0].value;
     let userPrefs = JSON.parse(getItem('userPrefs'));
+    let catInput = $('#cat-input');
+    let subInput = $('#sub-input');
+
+    // if in add category/subcategory mode, notify user
+    if (catInput.length && subInput.length) {
+      inputFeedback('catInput', 'subInput');
+      return;
+    } else if (subInput.length) { // if in add subcategory mode, notify user
+      inputFeedback(null, 'subInput');
+      return;
+    }
 
     // ensure a category was selected
     if (originalCategoryValue === '') {
@@ -872,7 +909,7 @@ $(document).ready(function() {
     // when edit button is clicked, if catSelectElement is already hidden, then show catSelectElement
     if (catSelectElement.hasClass('hidden')) {
       catParent.children().last().remove();
-      catSelectElement.removeClass('hidden');
+      catSelectElement.removeAttr('class');
       if (typeof userPrefs[2] === 'object') {
         userPrefs.pop();
         updateItem('userPrefs', JSON.stringify(userPrefs));
@@ -922,6 +959,14 @@ $(document).ready(function() {
 
       //get orginal category value
       let originalCategoryValue = userPrefs[2]['originalCategoryValue'];
+      // if no change was made
+      if (newCategoryValue === originalCategoryValue) {
+        catEditInput.remove();
+        catSelectElement.removeAttr('class');
+        userPrefs.pop();
+        updateItem('userPrefs', JSON.stringify(userPrefs));
+        return;
+      }
 
       // title case
       let words = newCategoryValue.split(' ');
@@ -940,7 +985,7 @@ $(document).ready(function() {
 
       // remove input and display category select element
       catEditInput.remove();
-      catSelectElement.removeClass('hidden');
+      catSelectElement.removeAttr('class');
 
       // update category select/options
       loadCategoriesToCategorySelectOption();
@@ -976,7 +1021,6 @@ $(document).ready(function() {
         parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]] = expensesArray;
       });
 
-      // update localStorage
       // console.log(parsedLocalStorage);
       for (let key in parsedLocalStorage) {
         updateItem(key, JSON.stringify(parsedLocalStorage[key]));
@@ -984,10 +1028,13 @@ $(document).ready(function() {
 
       // update chart
       updateChartData();
+    }
+  })
 
-    } // closing bracket for if enter key statement
-  }) // closing bracket/parens for handler
 
+
+
+  // EDIT SUBCATEGORY SELECT ELEMENTS
   function editSubcategorySelectElement() {
 
   }
