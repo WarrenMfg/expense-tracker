@@ -2,6 +2,7 @@
 TODO
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - edit category and subcategory names (edit button next to plus and minus buttons)
+- add trim() to all inputs
 - change font awesome titles to load on delay
 - add jQuery effects when adding expense
 - make tooltip only on one line
@@ -868,7 +869,7 @@ $(document).ready(function() {
       return;
     }
 
-    // when edit button is clicked, if catSelectElement is hidden, then show catSelectElement
+    // when edit button is clicked, if catSelectElement is already hidden, then show catSelectElement
     if (catSelectElement.hasClass('hidden')) {
       catParent.children().last().remove();
       catSelectElement.removeClass('hidden');
@@ -880,8 +881,7 @@ $(document).ready(function() {
     }
 
     // add userPrefs[2] object to store originalCategoryValue
-    userPrefs.push({});
-    userPrefs[2]['originalCategoryValue'] = originalCategoryValue;
+    userPrefs.push({'originalCategoryValue': originalCategoryValue});
     updateItem('userPrefs', JSON.stringify(userPrefs));
 
     // display input with originalCategoryValue
@@ -896,6 +896,7 @@ $(document).ready(function() {
   $('#category-div').on('keyup', '#cat-edit-input', function(event) {
     if (event.keyCode === 13) {
       let catEditInput = $('#cat-edit-input');
+      let catSelectElement = $('#category');
       let newCategoryValue = event.target.value;
 
       // ensure input is not empty
@@ -907,23 +908,85 @@ $(document).ready(function() {
         return;
       }
 
-      let userPrefs = JSON.parse(getItem('userPrefs'));
-      let oldCategoryValue = userPrefs['_temp_'];
+      // get local storage
+      let localStorageKeys = Object.keys(window.localStorage);
+      let parsedLocalStorage = {};
+      let userPrefs = [];
+      localStorageKeys.forEach(key => {
+        if (key !== 'userPrefs') {
+          parsedLocalStorage[key] = JSON.parse(getItem(key));
+        } else {
+          userPrefs = JSON.parse(getItem(key));
+        }
+      });
+
+      //get orginal category value
+      let originalCategoryValue = userPrefs[2]['originalCategoryValue'];
 
       // title case
+      let words = newCategoryValue.split(' ');
+      words = words.map(word => {
+        word = word.toLowerCase();
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+        return word;
+      });
+      newCategoryValue = words.join(' ');
 
+      // set new category in userPrefs
+      Object.defineProperty(userPrefs[1], newCategoryValue, Object.getOwnPropertyDescriptor(userPrefs[1], originalCategoryValue));
+      delete userPrefs[1][originalCategoryValue];
+      userPrefs.pop();
+      updateItem('userPrefs', JSON.stringify(userPrefs));
 
-      // set new category
-      // Object.defineProperty(userPrefs, oldCategoryValue)
+      // remove input and display category select element
+      catEditInput.remove();
+      catSelectElement.removeClass('hidden');
 
+      // update category select/options
+      loadCategoriesToCategorySelectOption();
+      catSelectElement.val(newCategoryValue);
 
-      // delete oldCategoryValue
+      // update expense item headers
+      let expenseCardHeaders = $(`.date-header`);
+      let categoryHeadersOfInterest = expenseCardHeaders.filter(`[data-category="${originalCategoryValue}"]`);
+      categoryHeadersOfInterest.each((i, header) => {
+        $(header)[0].dataset.category = newCategoryValue;
+      });
 
+      // update expense item spans
+      let expenseCategorySpans = categoryHeadersOfInterest.find('span:first-child');
+      expenseCategorySpans.each((i, span) => {
+        span.innerText = newCategoryValue;
+      });
 
+      // update expense categories in parsedLocalStorage
+      let buttons = categoryHeadersOfInterest.parentsUntil('#expenses').find('button');
+      buttons.each((i, button) => {
+        let dateKey = $(button)[0].dataset['datekey'].split('-');
+        let timestamp = parseInt($(button)[0].dataset['timestamp'], 10);
+        let expensesArray = parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]];
+        expensesArray = expensesArray.map(expense => {
+          if (expense['timestamp'] === timestamp) {
+            expense.category = newCategoryValue;
+            return expense;
+          } else {
+            return expense;
+          }
+        });
+        parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]] = expensesArray;
+      });
 
-    // console.log(event);
-    }
-  })
+      // update localStorage
+      // console.log(parsedLocalStorage);
+      for (let key in parsedLocalStorage) {
+        updateItem(key, JSON.stringify(parsedLocalStorage[key]));
+      }
+
+      // update chart
+      updateChartData();
+
+    } // closing bracket for if enter key statement
+  }) // closing bracket/parens for handler
 
   function editSubcategorySelectElement() {
 
