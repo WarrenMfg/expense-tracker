@@ -1,7 +1,6 @@
 /*
 TODO
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
-- edit category and subcategory names (edit button next to plus and minus buttons)
 - add trim() to all inputs
 - change font awesome titles to load on delay
 - add jQuery effects when adding expense
@@ -112,10 +111,27 @@ $(document).ready(function() {
           });
           return color;
         }
+      },
+      onmouseover: function(d) {
+        let dateHeaders = $('.date-header');
+        let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
+        let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+        categoryHovered.attr('style', 'box-shadow:0 0 15px black; transform:translate(-30px, 0');
+      },
+      onmouseout: function(d) {
+        let dateHeaders = $('.date-header');
+        let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
+        let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+        categoryHovered.removeAttr('style');
       }
     },
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      item: {
+        onclick: function(id) {
+          return;
+        }
+      }
     },
     pie: {
       label: {
@@ -138,6 +154,26 @@ $(document).ready(function() {
         }
       }
     }
+  });
+
+
+
+
+  // LISTEN FOR LEGEND MOUSEOVER
+  $('g').on('mouseover', '.c3-legend-item', function(event) {
+    let category = $(this)[0].textContent;
+    let dateHeaders = $('.date-header');
+    let filteredDateHeaders = dateHeaders.filter(`[data-category="${category}"]`);
+    let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+    categoryHovered.attr('style', 'box-shadow:0 0 15px black; transform:translate(-30px, 0');
+  });
+  // LISTEN FOR LEGEN MOUSEOUT
+  $('g').on('mouseout', '.c3-legend-item', function(event) {
+    let category = $(this)[0].textContent;
+    let dateHeaders = $('.date-header');
+    let filteredDateHeaders = dateHeaders.filter(`[data-category="${category}"]`);
+    let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+    categoryHovered.removeAttr('style');
   });
 
 
@@ -500,6 +536,9 @@ $(document).ready(function() {
     if ($('#cat-edit-input').length) {
       inputFeedback('catEditInput');
       return;
+    } else if ($('#sub-edit-input').length) { // if in subcategory edit mode
+      inputFeedback(null, 'subEditInput');
+      return;
     }
 
     // if previously clicked subcategory plus button, then clicked category plus button
@@ -548,6 +587,9 @@ $(document).ready(function() {
     // if in category edit mode
     if ($('#cat-edit-input').length) {
       inputFeedback('catEditInput');
+      return;
+    } else if ($('#sub-edit-input').length) { // if in subcategory edit mode
+      inputFeedback(null, 'subEditInput');
       return;
     }
 
@@ -719,6 +761,7 @@ $(document).ready(function() {
     let catInput = $('#cat-input');
     let subInput = $('#sub-input');
     let catEditInput = $('#cat-edit-input');
+    let subEditInput = $('#sub-edit-input');
 
     if (category === 'catInput') {
       catInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
@@ -729,7 +772,6 @@ $(document).ready(function() {
     }
     if (category === 'catSelectElement') {
       catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-      catSelectElement.focus();
       setTimeout(function() {
         catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
       }, 2000);
@@ -752,7 +794,17 @@ $(document).ready(function() {
       }, 2000);
     }
     if (subcategory === 'subSelectElement') {
-
+      subSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      setTimeout(function() {
+        subSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
+    }
+    if (subcategory === 'subEditInput') {
+      subEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      subEditInput.focus();
+      setTimeout(function() {
+        subEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
     }
 
     if (date === 'date') {
@@ -897,12 +949,15 @@ $(document).ready(function() {
       return;
     }
 
+    // if in subcategory edit mode, notify user
+    if ($('#sub-edit-input').length) {
+      inputFeedback(null, 'subEditInput');
+      return;
+    }
+
     // ensure a category was selected
     if (originalCategoryValue === '') {
-      catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-      setTimeout(function() {
-        catSelectElement.attr('style', 'transition:background-color 0.2s ease; background-color:white');
-      }, 2000);
+      inputFeedback('catSelectElement');
       return;
     }
 
@@ -938,10 +993,7 @@ $(document).ready(function() {
 
       // ensure input is not empty
       if (newCategoryValue === '') {
-        catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-        setTimeout(function() {
-          catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
-        }, 2000);
+        inputFeedback('catEditInput');
         return;
       }
 
@@ -1021,7 +1073,6 @@ $(document).ready(function() {
         parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]] = expensesArray;
       });
 
-      // console.log(parsedLocalStorage);
       for (let key in parsedLocalStorage) {
         updateItem(key, JSON.stringify(parsedLocalStorage[key]));
       }
@@ -1036,8 +1087,157 @@ $(document).ready(function() {
 
   // EDIT SUBCATEGORY SELECT ELEMENTS
   function editSubcategorySelectElement() {
+    let catSelectElement = $('#category');
+    let subSelectElement = $('#subcategory');
+    let catParent = $('#category-div');
+    let subParent = $('#subcategory-div');
+    let originalCategoryValue = catSelectElement[0].value;
+    let originalSubcategoryValue = subSelectElement[0].value;
+    let userPrefs = JSON.parse(getItem('userPrefs'));
+    let catInput = $('#cat-input');
+    let subInput = $('#sub-input');
 
+    // if in add category/subcategory mode, notify user
+    if (catInput.length && subInput.length) {
+      inputFeedback('catInput', 'subInput');
+      return;
+    } else if (subInput.length) { // if in add subcategory mode, notify user
+      inputFeedback(null, 'subInput');
+      return;
+    }
+
+    // if in category edit mode
+    if ($('#cat-edit-input').length) {
+      inputFeedback('catEditInput');
+      return;
+    }
+
+    // ensure a category is selected
+    if (originalCategoryValue === '' && originalSubcategoryValue === '') {
+      inputFeedback('catSelectElement', 'subSelectElement');
+      return;
+    } else if (originalSubcategoryValue === '') { // ensure a subcategory is selected
+      inputFeedback(null, 'subSelectElement');
+      return;
+    }
+
+    // when edit button is clicked, if subSelectElement is already hidden, then show catSelectElement
+    if (subSelectElement.hasClass('hidden')) {
+      subParent.children().last().remove();
+      subSelectElement.removeAttr('class');
+      if (typeof userPrefs[2] === 'object') {
+        userPrefs.pop();
+        updateItem('userPrefs', JSON.stringify(userPrefs));
+      }
+      return;
+    }
+
+    // add userPrefs[2] object to store originalCategoryValue and originalSubcategoryValue
+    userPrefs.push({'originalCategoryValue': originalCategoryValue, 'originalSubcategoryValue': originalSubcategoryValue});
+    updateItem('userPrefs', JSON.stringify(userPrefs));
+
+    // display input with originalSubcategoryValue
+    subSelectElement.attr('class', 'hidden');
+    subParent.append(
+      `<input id="sub-edit-input" type="text">`
+    );
+    $('#sub-edit-input').val(originalSubcategoryValue).focus();
   }
+
+  // listen for enter key to update subcategory
+  $('#subcategory-div').on('keyup', '#sub-edit-input', function(event) {
+    if (event.keyCode === 13) {
+      let subEditInput = $('#sub-edit-input');
+      let catSelectElement = $('#category');
+      let subSelectElement = $('#subcategory');
+      let newSubcategoryValue = event.target.value;
+
+      // ensure input is not empty
+      if (newSubcategoryValue === '') {
+        inputFeedback(null, 'subEditInput')
+        return;
+      }
+
+      // get local storage
+      let localStorageKeys = Object.keys(window.localStorage);
+      let parsedLocalStorage = {};
+      let userPrefs = [];
+      localStorageKeys.forEach(key => {
+        if (key !== 'userPrefs') {
+          parsedLocalStorage[key] = JSON.parse(getItem(key));
+        } else {
+          userPrefs = JSON.parse(getItem(key));
+        }
+      });
+
+      //get orginal category and subcategory values
+      let originalCategoryValue = userPrefs[2]['originalCategoryValue'];
+      let originalSubcategoryValue = userPrefs[2]['originalSubcategoryValue'];
+      // if no change was made
+      if (newSubcategoryValue === originalSubcategoryValue) {
+        subEditInput.remove();
+        subSelectElement.removeAttr('class');
+        userPrefs.pop();
+        updateItem('userPrefs', JSON.stringify(userPrefs));
+        return;
+      }
+
+      // title case
+      let words = newSubcategoryValue.split(' ');
+      words = words.map(word => {
+        word = word.toLowerCase();
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+        return word;
+      });
+      newSubcategoryValue = words.join(' ');
+
+      // set new subcategory in userPrefs
+      let subsArray = userPrefs[1][originalCategoryValue];
+      let indexOfOldSub = subsArray.indexOf(originalSubcategoryValue);
+      subsArray[indexOfOldSub] = newSubcategoryValue;
+      userPrefs[1][originalCategoryValue] = subsArray;
+      userPrefs.pop();
+      updateItem('userPrefs', JSON.stringify(userPrefs));
+
+      // remove input and display subcategory select element
+      subEditInput.remove();
+      subSelectElement.removeAttr('class');
+
+      // update subcategory select/options
+      refreshSubcategories(originalCategoryValue);
+      catSelectElement.val(originalCategoryValue);
+      subSelectElement.val(newSubcategoryValue);
+
+      // update expense item spans
+      let expenseCardHeaders = $(`.date-header`);
+      let subcategoryHeadersOfInterest = expenseCardHeaders.filter(`[data-category="${originalCategoryValue}"]`);
+      let expenseCategorySpans = subcategoryHeadersOfInterest.find('span:last-child');
+      expenseCategorySpans.each((i, span) => {
+        span.innerText = newSubcategoryValue;
+      });
+
+      // update expense subcategories in parsedLocalStorage
+      let buttons = subcategoryHeadersOfInterest.parentsUntil('#expenses').find('button');
+      buttons.each((i, button) => {
+        let dateKey = $(button)[0].dataset['datekey'].split('-');
+        let timestamp = parseInt($(button)[0].dataset['timestamp'], 10);
+        let expensesArray = parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]];
+        expensesArray = expensesArray.map(expense => {
+          if (expense['timestamp'] === timestamp) {
+            expense.subcategory = newSubcategoryValue;
+            return expense;
+          } else {
+            return expense;
+          }
+        });
+        parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]] = expensesArray;
+      });
+
+      for (let key in parsedLocalStorage) {
+        updateItem(key, JSON.stringify(parsedLocalStorage[key]));
+      }
+    } // closing for event.keyCode
+  }); // closing for event listener
 
 
 
