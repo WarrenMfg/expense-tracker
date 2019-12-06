@@ -1,7 +1,7 @@
 /*
 TODO
-- total expense css
 - font awesome
+- form inputFeedback() line 295
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add trim() to all inputs
 - add logic for input element interference when deleting cat/sub
@@ -297,6 +297,7 @@ $(document).ready(function() {
       // create or update data structure
       createDataStructure(timestamp, category, subcategory, dateKey, expense);
       $('#amount').val('').focus();
+      animateTotal();
     }
   });
 
@@ -434,7 +435,20 @@ $(document).ready(function() {
 
     totalDiv.empty();
     totalDiv.append(`
-    <h2>Total: ${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
+    <h2 class="stretch">Total: ${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
+  }
+
+
+
+
+  // ANIMATE TOTAL
+  function animateTotal() {
+    let stretch = $('.stretch');
+    stretch.animate({'letter-spacing': 15, 'font-size': 40}, 300);
+    stretch.animate({'letter-spacing': 5, 'font-size': 30}, 300);
+    // setTimeout(function() {
+    //   total.removeAttr('style');
+    // }, 1000);
   }
 
 
@@ -508,6 +522,9 @@ $(document).ready(function() {
     $(this).parent().remove();
     // update chart
     updateChartData();
+
+    // animate total
+    animateTotal();
   });
 
 
@@ -1437,6 +1454,7 @@ $(document).ready(function() {
     let expenseCard = $(this).parentsUntil('#expenses');
 
     updateEdit(expenseCard, expense);
+    animateTotal();
   });
 
   function updateEdit(expenseEvent, expenseString) {

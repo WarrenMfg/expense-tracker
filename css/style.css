@@ -150,7 +150,6 @@ h1 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* justify-items: end; */
 }
 
 .c3-chart-arc text {
@@ -171,12 +170,6 @@ h1 {
   letter-spacing: 5px;
   font-weight: bold;
   font-size: 30px;
-  text-align: center;
-}
-
-#total h3 {
-  letter-spacing: 5px;
-  font-size: 20px;
   text-align: center;
 }
 
