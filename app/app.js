@@ -291,34 +291,38 @@ $(document).ready(function() {
   // $('#amount').keyup(function(event) {
   //   why is enter working???
   // });
-  $('#addExpense').click(function(event) {
+  $('form').on('click', 'button', function(event) {
     event.preventDefault(); // prevent refresh!
+    let catInput = $('#cat-input');
+    let subInput = $('#sub-input');
+    let categoryValue = $('#category')[0].value;
+    let subcategoryValue = $('#subcategory')[0].value;
 
-    // collect the input
-    let timestamp = new Date().getTime();
-    let category = $('#category')[0].value;
-    let subcategory = $('#subcategory')[0].value;
-    let dateKey = $('#date')[0].value;
-    let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
-    let expenseObj;
+    if ((catInput.length === 0 && subInput.length === 0)) {
+      // collect the input
+      let timestamp = new Date().getTime();
+      let dateKey = $('#date')[0].value;
+      let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
+      let expenseObj;
 
-    // if something is missing
-    if (!category || !subcategory || !parseFloat(expense)) {
-      if (!category) {
-        inputFeedback('catSelectElement');
+      // if something is missing
+      if (!categoryValue || !subcategoryValue || !parseFloat(expense)) {
+        if (!categoryValue) {
+          inputFeedback('catSelectElement');
+        }
+        if (!subcategoryValue) {
+          inputFeedback(null, 'subSelectElement');
+        }
+        if (!parseFloat(expense)) {
+          inputFeedback(null, null, null, 'amount');
+        }
+        return;
+      } else {
+        // create or update data structure
+        createDataStructure(timestamp, categoryValue, subcategoryValue, dateKey, expense);
+        $('#amount').val('').focus();
+        animateTotal();
       }
-      if (!subcategory) {
-        inputFeedback(null, 'subSelectElement');
-      }
-      if (!parseFloat(expense)) {
-        inputFeedback(null, null, null, 'amount');
-      }
-      return;
-    } else {
-      // create or update data structure
-      createDataStructure(timestamp, category, subcategory, dateKey, expense);
-      $('#amount').val('').focus();
-      animateTotal();
     }
   });
 
