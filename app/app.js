@@ -455,12 +455,12 @@ $(document).ready(function() {
   // TOTAL EXPENSES
   function updateTotalExpenses(expensesArray) {
     let totalDiv = $('#total');
-    if (arguments.length === 0) {
+    console.log(expensesArray);
+    if (expensesArray === undefined || expensesArray.length === 0) {
       totalDiv.attr('style', 'display: none');
       return;
     }
     let total = expensesArray.reduce((acc, cur) => acc + cur[1], 0);
-
     totalDiv.attr('style', 'display: block');
     totalDiv.empty();
     totalDiv.append(`
