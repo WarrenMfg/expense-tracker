@@ -295,10 +295,13 @@ $(document).ready(function() {
     event.preventDefault(); // prevent refresh!
     let catInput = $('#cat-input');
     let subInput = $('#sub-input');
+    let catEditInput = $('#cat-edit-input');
+    let subEditInput = $('#sub-edit-input');
     let categoryValue = $('#category')[0].value;
     let subcategoryValue = $('#subcategory')[0].value;
 
-    if ((catInput.length === 0 && subInput.length === 0)) {
+
+    if ((catInput.length === 0 && subInput.length === 0) && (catEditInput.length === 0 && subEditInput.length === 0)) {
       // collect the input
       let timestamp = new Date().getTime();
       let dateKey = $('#date')[0].value;
