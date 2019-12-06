@@ -428,11 +428,12 @@ $(document).ready(function() {
   function updateTotalExpenses(expensesArray) {
     let totalDiv = $('#total');
     if (arguments.length === 0) {
-      totalDiv.remove();
+      totalDiv.attr('style', 'display: none');
       return;
     }
     let total = expensesArray.reduce((acc, cur) => acc + cur[1], 0);
 
+    totalDiv.attr('style', 'display: block');
     totalDiv.empty();
     totalDiv.append(`
     <h2 class="stretch">Total: ${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
@@ -456,23 +457,32 @@ $(document).ready(function() {
 
   // ORDER AND RESET
   $('#order-and-reset').on('click', 'button', function(event) {
-    detachAndClearExpenses();
+    // detachAndClearExpenses();
+    let expenses = $('#expenses');
     let newest = $('#newest');
     let oldest = $('#oldest');
+    let expenseList;
 
     if ($(this).attr('id') === 'newest') {
+      expenseList = expenses.children().not('#order-and-reset').get().reverse();
+      detachAndClearExpenses();
+      expenses.append(expenseList);
       userOrder('newest'); // set userPref
-      orderLocalStorage('newest');
+      // orderLocalStorage('newest');
       newest.attr('class', 'current-order');
       oldest.removeAttr('class');
 
     } else if ($(this).attr('id') === 'oldest') {
+      expenseList = expenses.children().not('#order-and-reset').get().reverse();
+      detachAndClearExpenses();
+      expenses.append(expenseList);
       userOrder('oldest'); // set userPref
-      orderLocalStorage('oldest');
+      // orderLocalStorage('oldest');
       oldest.attr('class', 'current-order');
       newest.removeAttr('class');
 
     } else if ($(this).attr('id') === 'reset') {
+      detachAndClearExpenses();
       $(this).parent().attr('style', 'display:none');
       let userPrefs = getItem('userPrefs'); // local userPrefs variable
       clearEverything();
@@ -1579,7 +1589,9 @@ $(document).ready(function() {
     button[0].dataset['datekey'] = newDate.join('-');
 
     // reorder expenses to align with userPrefs
-    $(`#${userOrder}`).trigger('click');
+    // $(`#${userOrder}`).trigger('click');
+    detachAndClearExpenses();
+    orderLocalStorage(userOrder, 'test');
   });
 
   function deleteExpenseWithPreviousDate(timestamp, dateKey, parsedLocalStorage) {
