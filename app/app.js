@@ -455,7 +455,6 @@ $(document).ready(function() {
   // TOTAL EXPENSES
   function updateTotalExpenses(expensesArray) {
     let totalDiv = $('#total');
-    console.log(expensesArray);
     if (expensesArray === undefined || expensesArray.length === 0) {
       totalDiv.attr('style', 'display: none');
       return;
@@ -1280,20 +1279,22 @@ $(document).ready(function() {
 
       // update expense item spans
       let expenseCardHeaders = $(`.date-header`);
-      let subcategoryHeadersOfInterest = expenseCardHeaders.filter(`[data-category="${originalCategoryValue}"]`);
-      let expenseCategorySpans = subcategoryHeadersOfInterest.find('span:last-child');
+      let categoryHeadersOfInterest = expenseCardHeaders.filter(`[data-category="${originalCategoryValue}"]`);
+      let expenseCategorySpans = categoryHeadersOfInterest.find('span:last-child');
       expenseCategorySpans.each((i, span) => {
-        span.innerText = newSubcategoryValue;
+        if (span.innerText === originalSubcategoryValue) {
+          span.innerText = newSubcategoryValue;
+        }
       });
 
       // update expense subcategories in parsedLocalStorage
-      let buttons = subcategoryHeadersOfInterest.parentsUntil('#expenses').find('button');
+      let buttons = categoryHeadersOfInterest.parentsUntil('#expenses').find('button');
       buttons.each((i, button) => {
         let dateKey = $(button)[0].dataset['datekey'].split('-');
         let timestamp = parseInt($(button)[0].dataset['timestamp'], 10);
         let expensesArray = parsedLocalStorage[dateKey[0]][dateKey[1]][dateKey[2]];
         expensesArray = expensesArray.map(expense => {
-          if (expense['timestamp'] === timestamp) {
+          if (expense['timestamp'] === timestamp && expense['subcategory'] === originalSubcategoryValue) {
             expense.subcategory = newSubcategoryValue;
             return expense;
           } else {
