@@ -1,6 +1,5 @@
 /*
 TODO
-- font awesome
 - form inputFeedback() line 295
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add trim() to all inputs
@@ -163,6 +162,20 @@ $(document).ready(function() {
 
 
 
+  // ADD FONT AWESOME TITLE ATTRIBUTES BECAUSE IT LOADS AS TEXT WHEN CODED IN HTML
+  setTimeout(function() {
+    document.getElementById('add-cat').setAttribute('title', 'Add a Category');
+    document.getElementById('minus-cat').setAttribute('title', 'Delete a Category');
+    document.getElementById('edit-cat').setAttribute('title', 'Edit a Category');
+
+    document.getElementById('add-sub').setAttribute('title', 'Add a Subcategory');
+    document.getElementById('minus-sub').setAttribute('title', 'Delete a Subcategory');
+    document.getElementById('edit-sub').setAttribute('title', 'Edit a Subcategory');
+  }, 2000);
+
+
+
+
   // LISTEN FOR LEGEND MOUSEOVER
   $('g').on('mouseover', '.c3-legend-item', function(event) {
     let category = $(this)[0].textContent;
@@ -290,8 +303,16 @@ $(document).ready(function() {
     let expenseObj;
 
     // if something is missing
-    if (!category || !subcategory || !dateKey || !parseFloat(expense)) {
-      // notify user somthing is missing
+    if (!category || !subcategory || !parseFloat(expense)) {
+      if (!category) {
+        inputFeedback('catSelectElement');
+      }
+      if (!subcategory) {
+        inputFeedback(null, 'subSelectElement');
+      }
+      if (!parseFloat(expense)) {
+        inputFeedback(null, null, null, 'amount');
+      }
       return;
     } else {
       // create or update data structure
@@ -793,6 +814,8 @@ $(document).ready(function() {
     let subInput = $('#sub-input');
     let catEditInput = $('#cat-edit-input');
     let subEditInput = $('#sub-edit-input');
+    let datePicker = $('#date');
+    let expenseAmount = $('#amount');
 
     if (category === 'catInput') {
       catInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
@@ -839,11 +862,20 @@ $(document).ready(function() {
     }
 
     if (date === 'date') {
-
+      datePicker.attr('style', 'transition:background-color 0.2s ease');
+      datePicker.addClass('.inputFeedback');
+      setTimeout(function() {
+        datePicker.attr('style', 'transition:background-color 0.2s ease');
+        datePicker.removeAttr('class');
+      }, 2000);
     }
 
     if (amount === 'amount') {
-
+      expenseAmount.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
+      expenseAmount.focus();
+      setTimeout(function() {
+        expenseAmount.attr('style', 'transition:background-color 0.2s ease; background-color:white');
+      }, 2000);
     }
   }
 
@@ -1513,10 +1545,14 @@ $(document).ready(function() {
     cardInfo.append(`
       <div><input class="edit-date" type="date" pattern="\d{4}-\d{2}-\d{2}"></div>
     `);
+    $('.edit-date').focus();
   });
 
   // update date on date change
   $('#expenses').on('change', '.edit-date', function(event) {
+    // unbind .edit-date 'blur' handler (below)
+    // $('#expenses').off('blur', '.edit-date');
+
     let target = $(event.target);
     let newDate = target[0].value.split('-');
     let cardInfo = target.parent().parent();
@@ -1582,8 +1618,8 @@ $(document).ready(function() {
     }
 
     // remove date picker and append new date
-    target.parent().remove();
     cardInfo.append(`<p>${formatDateForCard(newDate)}</p>`);
+    target.parent().remove();
 
     // update button data-datekey
     button[0].dataset['datekey'] = newDate.join('-');
@@ -1625,6 +1661,18 @@ $(document).ready(function() {
     }
     return parsedLocalStorage;
   }
+
+  $('#expenses').on('blur', '.edit-date', function(event) {
+    if ($(this).parent().parent().children().last()[0].tagName == 'DIV') {
+      let target = $(event.target);
+      let button = target.parentsUntil('#expenses').find('button');
+      let cardInfo = target.parentsUntil('#expenses').find('.card-info');
+      let dateKey = button[0].dataset['datekey'].split('-');
+
+      target.parent().remove();
+      cardInfo.append(`<p>${formatDateForCard(dateKey)}</p>`);
+    }
+  });
 
 
 

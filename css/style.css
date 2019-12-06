@@ -71,6 +71,19 @@ i {
   position: relative;
 }
 
+#date::-webkit-inner-spin-button {
+  display: none;
+}
+
+#date::-webkit-datetime-edit {
+  padding: 10px;
+  margin: 0 -20px 0 -10px;
+}
+
+#date.inputFeedback {
+  background-color: #f4cccc;
+}
+
 #date::-webkit-calendar-picker-indicator {
   position: absolute;
   top: 0;
@@ -342,6 +355,10 @@ h1 {
 .edit-date {
   width: 85%;
   margin-left: 15px;
+}
+
+.edit-date::-webkit-inner-spin-button {
+  display: none;
 }
 
 .edit-date::-webkit-calendar-picker-indicator {
