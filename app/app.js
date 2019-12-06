@@ -1,11 +1,10 @@
 /*
 TODO
-- form inputFeedback() line 295
-- validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add trim() to all inputs
-- add logic for input element interference when deleting cat/sub
 - in edit cat/sub mode, I can still use select element--change this
-- change font awesome titles to load on delay
+
+- validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
+- add logic for input element interference when deleting cat/sub
 - add jQuery effects when adding expense
 - make tooltip only on one line
 - improve CSS
@@ -162,7 +161,7 @@ $(document).ready(function() {
 
 
 
-  // ADD FONT AWESOME TITLE ATTRIBUTES BECAUSE IT LOADS AS TEXT WHEN CODED IN HTML
+  // ADD FONT AWESOME TITLE ATTRIBUTES BECAUSE IT MOMENTARILY LOADS AS TEXT WHEN CODED IN HTML
   setTimeout(function() {
     document.getElementById('add-cat').setAttribute('title', 'Add a Category');
     document.getElementById('minus-cat').setAttribute('title', 'Delete a Category');
@@ -474,9 +473,6 @@ $(document).ready(function() {
     let stretch = $('.stretch');
     stretch.animate({'letter-spacing': 15, 'font-size': 40}, 300);
     stretch.animate({'letter-spacing': 5, 'font-size': 30}, 300);
-    // setTimeout(function() {
-    //   total.removeAttr('style');
-    // }, 1000);
   }
 
 
@@ -691,29 +687,29 @@ $(document).ready(function() {
       // if both inputs are visible (adding a category and subcategory)
       if (catSelectElement.attr('class') === 'hidden') {
         let catInput = $('#cat-input');
-        let bothHaveValues = !!catInput[0].value && !!subInput[0].value;
+        let bothHaveValues = !!catInput[0].value.trim() && !!subInput[0].value.trim();
         if (bothHaveValues) {
-          let titleCaseArray = addCategoryAndSubcategoryToUserPrefs(catInput[0].value, subInput[0].value);
+          let titleCaseArray = addCategoryAndSubcategoryToUserPrefs(catInput[0].value.trim(), subInput[0].value.trim());
           loadCategoriesToCategorySelectOption();
           showOrHideBothInputs(titleCaseArray[0], titleCaseArray[1]);
         } else {
-          if (!catInput[0].value && !subInput[0].value) {
+          if (!catInput[0].value.trim() && !subInput[0].value.trim()) {
             inputFeedback('catInput', 'subInput');
-          } else if (!catInput[0].value) {
+          } else if (!catInput[0].value.trim()) {
             inputFeedback('catInput');
-          } else if (!subInput[0].value) {
+          } else if (!subInput[0].value.trim()) {
             inputFeedback(null, 'subInput');
           }
         }
       } else { // just adding subcategory
-        if (catSelectElement[0].value !== '' && !!subInput[0].value) {
-          let titleCaseSubInput = addSubcategoryToCategory(catSelectElement[0].value, subInput[0].value);
+        if (catSelectElement[0].value !== '' && !!subInput[0].value.trim()) {
+          let titleCaseSubInput = addSubcategoryToCategory(catSelectElement[0].value, subInput[0].value.trim());
           showOrHideSubcategoryInput(catSelectElement[0].value, titleCaseSubInput);
         } else {
           if (catSelectElement[0].value === '') {
             inputFeedback('catSelectElement');
           }
-          if (!subInput[0].value) {
+          if (!subInput[0].value.trim()) {
             inputFeedback(null, 'subInput');
           }
         }
@@ -1009,6 +1005,8 @@ $(document).ready(function() {
     let catInput = $('#cat-input');
     let subInput = $('#sub-input');
 
+    // disable deletion button
+
     // if in add category/subcategory mode, notify user
     if (catInput.length && subInput.length) {
       inputFeedback('catInput', 'subInput');
@@ -1058,7 +1056,7 @@ $(document).ready(function() {
     if (event.keyCode === 13) {
       let catEditInput = $('#cat-edit-input');
       let catSelectElement = $('#category');
-      let newCategoryValue = event.target.value;
+      let newCategoryValue = event.target.value.trim();
 
       // ensure input is not empty
       if (newCategoryValue === '') {
@@ -1219,7 +1217,7 @@ $(document).ready(function() {
       let subEditInput = $('#sub-edit-input');
       let catSelectElement = $('#category');
       let subSelectElement = $('#subcategory');
-      let newSubcategoryValue = event.target.value;
+      let newSubcategoryValue = event.target.value.trim();
 
       // ensure input is not empty
       if (newSubcategoryValue === '') {
@@ -1313,7 +1311,7 @@ $(document).ready(function() {
 
 
 
-  // EDIT CATEGORIES AND SUBCATEGORIES WITHIN EXPENSE CARD
+  // CHANGE CATEGORIES AND SUBCATEGORIES WITHIN EXPENSE CARD
   $('#expenses').on('click', '.date-header span', function(event) {
     // info for editCatAndSub
     let target = $(event.target);
@@ -1409,10 +1407,11 @@ $(document).ready(function() {
     dateHeader.append(`<span>${updatedCat}</span><span>${updatedSub}</span`);
     dateHeader.removeClass('header-edit');
 
-    // remove .update from button, add .delete, change innerText
+    // remove .update from button, add .delete, change innerText and title
     target.removeClass('update');
     target.addClass('delete');
     target[0].innerText = 'Delete';
+    target[0].title = 'Delete';
 
     // add .editable-expense back to expense, make contenteditable = true, and remove inline styles
     let editableExpense = target.parentsUntil('#expenses').find('.card-info p:first-child');
