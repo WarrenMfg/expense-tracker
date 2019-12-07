@@ -61,9 +61,35 @@ i {
 #category-div {
   grid-area: category;
 }
+#category-div p {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-areas: 'category-span cat-buttons .';
+}
+#category-div p span:first-child {
+  grid-area: category-span;
+}
+#category-div p span:last-child {
+  grid-area: cat-buttons;
+  display: flex;
+  justify-content: space-between;
+}
 
 #subcategory-div {
   grid-area: subcategory;
+}
+#subcategory-div p {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-areas: 'subcategory-span sub-buttons .';
+}
+#subcategory-div p span:first-child {
+  grid-area: subcategory-span;
+}
+#subcategory-div p span:last-child {
+  grid-area: sub-buttons;
+  display: flex;
+  justify-content: space-between;
 }
 
 #date-div {

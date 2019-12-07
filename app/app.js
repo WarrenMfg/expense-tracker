@@ -1,7 +1,7 @@
 /*
 TODO
-- add trim() to all inputs
-- in edit cat/sub mode, I can still use select element--change this
+- add notes section in expense card
+- undo delete expense card???
 
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add logic for input element interference when deleting cat/sub
@@ -56,6 +56,11 @@ $(document).ready(function() {
     userPrefs.push({});
     createItem('userPrefs', JSON.stringify(userPrefs));
   } else {
+    let parsedUserPrefs = (JSON.parse(getItem('userPrefs')));
+    if (parsedUserPrefs.length > 2) {
+      parsedUserPrefs.length = 2; // prevents userPrefs[2] (edit object) from lingering when page is refreshed in the middle of editing a cat or sub
+      updateItem('userPrefs', JSON.stringify(parsedUserPrefs));
+    }
     loadCategoriesToCategorySelectOption();
   }
 
@@ -740,7 +745,7 @@ $(document).ready(function() {
     return argumentsArray;
   }
 
-  function addSubcategoryToCategory(category, subcategory) { // at a later time, add validation to prohibit same subcategory
+  function addSubcategoryToCategory(category, subcategory) {
     let parsedUserPrefs = JSON.parse(getItem('userPrefs'));
     let categories = parsedUserPrefs[1];
 
@@ -887,7 +892,28 @@ $(document).ready(function() {
   // DELETE CATEGORY/SUBCATEGORY
   function deleteCategory() {
     let catSelectElement = $('#category');
+
+    // if in add category mode
+    if ($('#cat-input').length && $('#sub-input').length) {
+      inputFeedback('catInput', 'subInput');
+      return;
+    } else if ($('#sub-input').length) {
+      inputFeedback(null, 'subInput');
+      return;
+    }
+
+    // if in edit mode
+    if ($('#cat-edit-input').length) {
+      inputFeedback('catEditInput');
+      return;
+    } else if ($('#sub-edit-input').length) {
+      inputFeedback(null, 'subEditInput');
+      return;
+    }
+
+    // if no category is selected
     if (catSelectElement[0].value === '') {
+      inputFeedback('catSelectElement');
       return;
     }
 
@@ -954,7 +980,28 @@ $(document).ready(function() {
   function deleteSubcategory() {
     let catSelectElement = $('#category');
     let subSelectElement = $('#subcategory');
+
+    // if in add mode
+    if ($('#cat-input').length && $('#sub-input').length) {
+      inputFeedback('catInput', 'subInput');
+      return;
+    } else if ($('#sub-input').length) {
+      inputFeedback(null, 'subInput');
+      return;
+    }
+
+    // if in edit mode
+    if ($('#cat-edit-input').length) {
+      inputFeedback('catEditInput');
+      return;
+    } else if ($('#sub-edit-input').length) {
+      inputFeedback(null, 'subEditInput');
+      return;
+    }
+
+    // if no subcategory is selected
     if (subSelectElement[0].value === '') {
+      inputFeedback(null, 'subSelectElement');
       return;
     }
 
