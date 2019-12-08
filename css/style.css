@@ -191,13 +191,51 @@ h1 {
   align-items: center;
 }
 
-.c3-chart-arc text {
-  font-size: 16px;
-  text-shadow: 0 0 9px black;
+.c3-chart-text {
+  font-size: 12px;
 }
 
 .c3-legend-item text {
   font-size: 16px;
+}
+
+.c3-xgrid-focus {
+  display: none;
+}
+
+.tick tspan {
+  font-size: 12px;
+}
+
+.c3-tooltip-container {
+  background-color: rgba(255,255,255,1);
+  box-shadow: 0 0 10px gray;
+  border: 1px solid gray;
+  padding: 10px;
+}
+
+.c3-tooltip-container p {
+  display: grid;
+  grid-template-columns: 0.25fr 1fr 1fr;
+  grid-template-areas: 'catColor catName catValue';
+}
+
+.c3-tooltip-container p span:first-child {
+  grid-area: catColor;
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+}
+
+.c3-tooltip-container p span:nth-child(2) {
+  grid-area: catName;
+  margin-left: 5px;
+}
+
+.c3-tooltip-container p span:last-child {
+  grid-area: catValue;
+  display: inline-block;
+  text-align: right;
 }
 
 #total {

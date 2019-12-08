@@ -98,9 +98,13 @@ $(document).ready(function() {
   let chart = c3.generate({
     bindto: '#chart',
     data: {
-      type: 'pie',
+      type: 'bar',
       columns: [],
-      labels: true,
+      labels: {
+        format: function(v) {
+          return v.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      },
       color: function(color, d) {
         if (typeof d === 'object') {
           chart.data.columns.forEach(function(column, index) {
@@ -118,18 +122,31 @@ $(document).ready(function() {
           });
           return color;
         }
-      },
-      onmouseover: function(d) {
-        let dateHeaders = $('.date-header');
-        let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
-        let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
-        categoryHovered.attr('style', 'box-shadow:0 0 15px black; transform:translate(-30px, 0');
-      },
-      onmouseout: function(d) {
-        let dateHeaders = $('.date-header');
-        let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
-        let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
-        categoryHovered.removeAttr('style');
+      }//,
+      // onmouseover: function(d) {
+      //   let dateHeaders = $('.date-header');
+      //   let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
+      //   let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+      //   categoryHovered.attr('style', 'box-shadow:0 0 15px black; transform:translate(-30px, 0');
+      // },
+      // onmouseout: function(d) {
+        // chart.defocus(d.id);
+      //   console.log(d);
+      //   return;
+      //   let dateHeaders = $('.date-header');
+      //   let filteredDateHeaders = dateHeaders.filter(`[data-category="${d.id || d}"]`);
+      //   let categoryHovered = filteredDateHeaders.parentsUntil('#expenses').filter('.expenseItem');
+      //   categoryHovered.removeAttr('style');
+      // }
+    },
+    axis: {
+      x: {
+        show: false
+      }
+    },
+    bar: {
+      width: {
+        ratio: 1
       }
     },
     legend: {
@@ -140,25 +157,37 @@ $(document).ready(function() {
         }
       }
     },
-    pie: {
-      label: {
-        format: function(v) {
-          return v.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-      }
-    },
+    // pie: {
+    //   label: {
+    //     format: function(v) {
+    //       return v.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2});
+    //     }
+    //   }
+    // },
     size: {
       width: 550,
       height: 550
     },
     tooltip: {
       format: {
-        name: function(name, ratio, id, index) {
-          return `${name} ${(ratio * 100).toFixed(2)}%`;
+        title: function(x, index) {
+          return;
         },
+        // name: function(name, ratio, id, index) {
+        //   console.log('name', arguments);
+        //   return `${name} ${(ratio * 100).toFixed(2)}%`;
+        // },
         value: function(value, ratio, d) {
           return `${value.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         }
+      },
+      contents: function(d, title, value, color) {
+        let html = ``;
+        d.forEach((category, i) => {
+          html += `<p><span style=background-color:${myColors[i]}></span> <span>${category.id}</span> <span>${category.value.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>`
+        });
+
+        return html;
       }
     }
   });
@@ -176,7 +205,6 @@ $(document).ready(function() {
     document.getElementById('minus-sub').setAttribute('title', 'Delete a Subcategory');
     document.getElementById('edit-sub').setAttribute('title', 'Edit a Subcategory');
   }, 2000);
-
 
 
 
@@ -467,7 +495,7 @@ $(document).ready(function() {
     totalDiv.attr('style', 'display: block');
     totalDiv.empty();
     totalDiv.append(`
-    <h2 class="stretch">Total: ${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
+    <h2 class="stretch">Total remaining:<br>${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
   }
 
 
@@ -476,7 +504,7 @@ $(document).ready(function() {
   // ANIMATE TOTAL
   function animateTotal() {
     let stretch = $('.stretch');
-    stretch.animate({'letter-spacing': 15, 'font-size': 40}, 300);
+    stretch.animate({'letter-spacing': 10, 'font-size': 35}, 300);
     stretch.animate({'letter-spacing': 5, 'font-size': 30}, 300);
   }
 
@@ -1520,6 +1548,8 @@ $(document).ready(function() {
     // remove dollar sign
     if (amount[0] === '$') {
       amount.splice(0, 1);
+    } else if (amount[1] === '$') {
+      amount.splice(1, 1);
     }
 
     // remove comma(s)
@@ -1759,8 +1789,8 @@ $(document).ready(function() {
     // convert categoriesObj into array of arrays for chart
     for (let cat in categoriesObj) {
       let column = [];
-      column.push(cat);
       let sum = parseFloat(categoriesObj[cat].reduce((acc, val) => acc + val).toFixed(2));
+      column.push(cat);
       column.push(sum);
       expenseColumns.push(column);
     }
