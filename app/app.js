@@ -2,7 +2,6 @@
 TODO
 - add notes section in expense card
 - undo delete expense card???
-
 - validation, when adding cat and subcat, to prohibit overwritting duplicate category and notify of missing info
 - add logic for input element interference when deleting cat/sub
 - add jQuery effects when adding expense
@@ -247,8 +246,12 @@ $(document).ready(function() {
     let localStorageKeys = Object.keys(window.localStorage);
 
     if (localStorageKeys.length === 1) { // if only key is userPrefs
+      console.log('there');
+      $('#chart-container').attr('style', 'display:none');
       $('#reset').trigger('click');
       return;
+    } else {
+      $('#chart-container').attr('style', 'display:flex');
     }
 
     // add indication of current order to button
@@ -325,40 +328,55 @@ $(document).ready(function() {
   // });
   $('form').on('click', 'button', function(event) {
     event.preventDefault(); // prevent refresh!
-    let catInput = $('#cat-input');
-    let subInput = $('#sub-input');
-    let catEditInput = $('#cat-edit-input');
-    let subEditInput = $('#sub-edit-input');
-    let categoryValue = $('#category')[0].value;
-    let subcategoryValue = $('#subcategory')[0].value;
 
+    if (document.activeElement === document.querySelector('#amount') || document.activeElement === document.querySelector('#addExpense')) {
+      let catInput = $('#cat-input');
+      let subInput = $('#sub-input');
+      let catEditInput = $('#cat-edit-input');
+      let subEditInput = $('#sub-edit-input');
+      let categoryValue = $('#category')[0].value;
+      let subcategoryValue = $('#subcategory')[0].value;
 
-    if ((catInput.length === 0 && subInput.length === 0) && (catEditInput.length === 0 && subEditInput.length === 0)) {
-      // collect the input
-      let timestamp = new Date().getTime();
-      let dateKey = $('#date')[0].value;
-      let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
-      let expenseObj;
+      if ((catInput.length === 0 && subInput.length === 0) && (catEditInput.length === 0 && subEditInput.length === 0)) {
+        // collect the input
+        let timestamp = new Date().getTime();
+        let dateKey = $('#date')[0].value;
+        let expense = parseFloat($('#amount').val()).toFixed(2); // (string)
+        let expenseObj;
 
-      // if something is missing
-      if (!categoryValue || !subcategoryValue || !parseFloat(expense)) {
-        if (!categoryValue) {
-          inputFeedback('catSelectElement');
+        // if something is missing
+        if (!categoryValue || !subcategoryValue || !parseFloat(expense)) {
+          if (!categoryValue) {
+            inputFeedback('catSelectElement');
+          }
+          if (!subcategoryValue) {
+            inputFeedback(null, 'subSelectElement');
+          }
+          if (!parseFloat(expense)) {
+            inputFeedback(null, null, null, 'amount');
+          }
+          return;
+        } else {
+          // create or update data structure
+          createDataStructure(timestamp, categoryValue, subcategoryValue, dateKey, expense);
+          $('#amount').val('').focus();
+          animateTotal();
         }
-        if (!subcategoryValue) {
-          inputFeedback(null, 'subSelectElement');
-        }
-        if (!parseFloat(expense)) {
-          inputFeedback(null, null, null, 'amount');
-        }
+      } else if (catInput.length && subInput.length) {
+        inputFeedback('catInput', 'subInput');
         return;
-      } else {
-        // create or update data structure
-        createDataStructure(timestamp, categoryValue, subcategoryValue, dateKey, expense);
-        $('#amount').val('').focus();
-        animateTotal();
+      } else if (subInput.length) {
+        inputFeedback(null, 'subInput');
+        return;
+      } else if (catEditInput.length) {
+        inputFeedback('catEditInput');
+        return;
+      } else if (subEditInput.length) {
+        inputFeedback(null, 'subEditInput');
+        return;
       }
     }
+
   });
 
 
@@ -488,6 +506,7 @@ $(document).ready(function() {
   function updateTotalExpenses(expensesArray) {
     let totalDiv = $('#total');
     if (expensesArray === undefined || expensesArray.length === 0) {
+      $('#chart-container').attr('style', 'display:none');
       totalDiv.attr('style', 'display: none');
       return;
     }
@@ -495,7 +514,7 @@ $(document).ready(function() {
     totalDiv.attr('style', 'display: block');
     totalDiv.empty();
     totalDiv.append(`
-    <h2 class="stretch">Total remaining:<br>${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
+    <h2 class="stretch">${total.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>`);
   }
 
 
@@ -504,7 +523,7 @@ $(document).ready(function() {
   // ANIMATE TOTAL
   function animateTotal() {
     let stretch = $('.stretch');
-    stretch.animate({'letter-spacing': 10, 'font-size': 35}, 300);
+    stretch.animate({'letter-spacing': 15, 'font-size': 40}, 300);
     stretch.animate({'letter-spacing': 5, 'font-size': 30}, 300);
   }
 
@@ -537,7 +556,8 @@ $(document).ready(function() {
       oldest.attr('class', 'current-order');
       newest.removeAttr('class');
 
-    } else if ($(this).attr('id') === 'reset') {
+    } else if ($(this).attr('id') === 'reset' || event === 'reset') {
+      $('#chart-container').attr('style', 'display:none');
       detachAndClearExpenses();
       $(this).parent().attr('style', 'display:none');
       let userPrefs = getItem('userPrefs'); // local userPrefs variable
@@ -854,7 +874,6 @@ $(document).ready(function() {
 
     if (category === 'catInput') {
       catInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-      catInput.focus();
       setTimeout(function() {
         catInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
       }, 2000);
@@ -867,7 +886,6 @@ $(document).ready(function() {
     }
     if (category === 'catEditInput') {
       catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-      catEditInput.focus();
       setTimeout(function() {
         catEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
       }, 2000);
@@ -876,7 +894,6 @@ $(document).ready(function() {
     if (subcategory === 'subInput') {
       subInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
       if (category === null) {
-        subInput.focus();
       }
       setTimeout(function() {
         subInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
@@ -890,7 +907,6 @@ $(document).ready(function() {
     }
     if (subcategory === 'subEditInput') {
       subEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:#f4cccc');
-      subEditInput.focus();
       setTimeout(function() {
         subEditInput.attr('style', 'transition:background-color 0.2s ease; background-color:white');
       }, 2000);
@@ -977,6 +993,7 @@ $(document).ready(function() {
     refreshSubcategories();
     detachAndClearExpenses();
     orderLocalStorage(userOrder());
+    animateTotal();
   }
 
   function deleteExpenses(item, catOption, keyOfInterest, subOption) {
@@ -1065,6 +1082,7 @@ $(document).ready(function() {
     refreshSubcategories(catSelectElement[0].value);
     detachAndClearExpenses();
     orderLocalStorage(userOrder());
+    animateTotal();
   }
 
 
@@ -1128,7 +1146,7 @@ $(document).ready(function() {
 
   // listen for enter key to update category
   $('#category-div').on('keyup', '#cat-edit-input', function(event) {
-    if (event.keyCode === 13) {
+    if (event.keyCode === 13 && document.activeElement === document.querySelector('#cat-edit-input')) {
       let catEditInput = $('#cat-edit-input');
       let catSelectElement = $('#category');
       let newCategoryValue = event.target.value.trim();
